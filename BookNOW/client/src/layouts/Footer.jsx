@@ -23,10 +23,10 @@ function Footer() {
                     {'© '}
                     {new Date().getFullYear()}
                     {' '}
-                    <Link color="inherit" href="https://your-website.com/"> 
+                    <Link color="inherit" href=""> 
                         BookNOW
                     </Link>
-                    {' | Inspired by BookMyShow | For Educational Purposes Only'}
+                    }
                 </Typography>
                 
             </Container>
