@@ -1,10 +1,10 @@
-
+// client/src/pages/HomePage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { getMoviesApi } from '../api/movies';
 import { getEventsApi } from '../api/events';
 import MovieCardMui from '../components/MovieCardMui';
 import EventCardMui from '../components/EventCardMui';
-
+// MUI Components
 import { Container, Typography, Grid, Box, Alert, IconButton, CircularProgress } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';

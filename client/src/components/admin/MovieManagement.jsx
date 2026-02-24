@@ -1,3 +1,4 @@
+// client/src/components/admin/MovieManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { getMoviesApi, createMovieApi, updateMovieApi, deleteMovieApi } from '../../api/movies';
 import {
@@ -247,6 +248,7 @@ const MovieManagement = () => {
                                 </FormControl>
                             </Grid>
 
+                            {/* Corrected Format Multi-Select */}
                             <Grid item xs={12}>
                                 <FormControl fullWidth margin="dense">
                                     <InputLabel>Formats</InputLabel>
@@ -265,11 +267,13 @@ const MovieManagement = () => {
                                 </FormControl>
                             </Grid>
                             
+                            {/* Other array fields */}
                             <Grid item xs={12}><Typography variant="subtitle2" sx={{mt:1}}>Genres *</Typography></Grid>
                             <Grid item xs={12} sm={9}><TextField value={genreInput} onChange={handleArrayInputChange(setGenreInput)} label="Add Genre" fullWidth margin="dense" size="small"/></Grid>
                             <Grid item xs={12} sm={3} sx={{display:'flex', alignItems:'center'}}><Button onClick={() => addToArrayField('genre', genreInput, setGenreInput)} variant="outlined" size="small" fullWidth>Add</Button></Grid>
                             <Grid item xs={12}>{(currentMovie.genre || []).map(g => <Chip key={g} label={g} onDelete={() => removeFromArrayField('genre', g)} sx={{mr:0.5, mb:0.5}}/>)}</Grid>
 
+                            {/* Cast & Crew, Poster & Trailer URL fields remain the same */}
                             <Grid item xs={12}><Typography variant="subtitle2" sx={{mt:1}}>Cast</Typography></Grid>
                             <Grid item xs={12} sm={9}><TextField value={castInput} onChange={handleArrayInputChange(setCastInput)} label="Add Cast Member" fullWidth margin="dense" size="small"/></Grid>
                             <Grid item xs={12} sm={3} sx={{display:'flex', alignItems:'center'}}><Button onClick={() => addToArrayField('cast', castInput, setCastInput)} variant="outlined" size="small" fullWidth>Add</Button></Grid>

@@ -1,15 +1,19 @@
+// client/src/pages/MovieDetailsPage.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+// API Calls
 import { getMovieByIdApi, checkReviewEligibilityApi } from '../api/movies';
 import { getShowtimesApi } from '../api/showtimes';
 import { getReviewsForMovieApi, likeReviewApi, dislikeReviewApi, reportReviewApi } from '../api/reviews';
+// MUI Components
 import {
     Container, Grid, Box, Typography, Chip, CircularProgress, Alert, Rating,
     Divider, Paper, List, ListItem, ListItemText, Avatar, ListItemAvatar, Button,
     Tooltip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField
 } from '@mui/material';
 import dayjs from 'dayjs';
+// Icons
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LanguageIcon from '@mui/icons-material/Language';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -40,7 +44,7 @@ const MovieDetailsPage = () => {
     const { movieId } = useParams();
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
-    const showtimesRef = useRef(null);
+    const showtimesRef = useRef(null); // Ref for scrolling to showtimes
 
     const [movie, setMovie] = useState(null);
     const [showtimes, setShowtimes] = useState([]);

@@ -1,3 +1,4 @@
+// File: /server/routes/movieRoutes.js
 const express = require('express');
 const {
     getMovies,
@@ -5,7 +6,7 @@ const {
     createMovie,
     updateMovie,
     deleteMovie,
-    checkReviewEligibility 
+    checkReviewEligibility // Import new controller
 } = require('../controllers/movieController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { isAdmin, isOrganizerOrAdmin } = require('../middleware/roleMiddleware');
@@ -25,16 +26,16 @@ const movieValidationRules = [
     check('trailerUrl', 'Invalid Trailer URL').optional({ checkFalsy: true }).isURL(),
 ];
 
-
+// Public Routes
 router.get('/', getMovies);
 router.get('/:id', getMovieById);
 
-
+// Protected Routes
 router.post('/', authMiddleware, isOrganizerOrAdmin, movieValidationRules, createMovie);
 router.put('/:id', authMiddleware, isOrganizerOrAdmin, movieValidationRules, updateMovie);
 router.delete('/:id', authMiddleware, isAdmin, deleteMovie);
 
-
+// New Protected Route for Review Eligibility
 router.get('/:id/review-eligibility', authMiddleware, checkReviewEligibility);
 
 module.exports = router;

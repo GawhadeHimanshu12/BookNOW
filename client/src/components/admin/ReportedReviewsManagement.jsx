@@ -1,3 +1,4 @@
+// File: /client/src/components/admin/ReportedReviewsManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { getReportedReviewsAdminApi, resolveReportAdminApi } from '../../api/admin';
 import {
@@ -35,7 +36,7 @@ const ReportedReviewsManagement = () => {
         }
         try {
             await resolveReportAdminApi(reviewId, action);
-            
+            // Refresh the list after action
             fetchReportedReviews();
         } catch (err) {
             alert(`Action failed: ${err.message || 'Server error'}`);

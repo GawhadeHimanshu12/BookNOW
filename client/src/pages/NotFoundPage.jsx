@@ -1,4 +1,4 @@
-
+// client/src/pages/NotFoundPage.jsx
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Container from '@mui/material/Container';

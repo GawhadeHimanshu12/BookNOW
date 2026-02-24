@@ -1,10 +1,44 @@
+// File: /server/controllers/reviewController.js
+// Purpose: Contains logic for handling review-related API requests.
+
 const Review = require('../models/Review');
 const Movie = require('../models/Movie');
-const Booking = require('../models/Booking'); 
-const Showtime = require('../models/Showtime'); 
+const Booking = require('../models/Booking'); // Needed to check if user booked the movie
+const Showtime = require('../models/Showtime'); // Might need for booking check
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
+
+// --- Helper: Recalculate Movie Rating ---
+const calculateAverageRating = async (movieId) => {
+    const stats = await Review.aggregate([
+        { $match: { movie: movieId } },
+        {
+            $group: {
+                _id: '$movie',
+                averageRating: { $avg: '$rating' },
+                numberOfReviews: { $sum: 1 }
+            }
+        }
+    ]);
+
+    if (stats.length > 0) {
+        await Movie.findByIdAndUpdate(movieId, {
+            averageRating: stats[0].averageRating.toFixed(1), // Round to 1 decimal
+            numberOfReviews: stats[0].numberOfReviews
+        });
+    } else {
+        await Movie.findByIdAndUpdate(movieId, {
+            averageRating: 0,
+            numberOfReviews: 0
+        });
+    }
+};
+
+
+// @desc    Get all reviews for a specific movie
+// @route   GET /api/movies/:movieId/reviews
+// @access  Public
 exports.getReviewsForMovie = async (req, res) => {
     const movieId = req.params.movieId;
 
@@ -13,14 +47,14 @@ exports.getReviewsForMovie = async (req, res) => {
     }
 
     try {
-        
+        // Check if movie exists
         const movieExists = await Movie.findById(movieId);
         if (!movieExists) {
              return res.status(404).json({ msg: 'Movie not found' });
         }
 
         const reviews = await Review.find({ movie: movieId })
-                                    .populate('user', 'name') 
+                                    .populate('user', 'name') // Populate user's name
                                     .sort({ createdAt: -1 });
 
         res.status(200).json(reviews);
@@ -30,11 +64,15 @@ exports.getReviewsForMovie = async (req, res) => {
     }
 };
 
+
+// @desc    Get all reviews written by the logged-in user
+// @route   GET /api/reviews/me
+// @access  Private
 exports.getMyReviews = async (req, res) => {
     const userId = req.user.id;
     try {
         const reviews = await Review.find({ user: userId })
-                                    .populate('movie', 'title posterUrl') 
+                                    .populate('movie', 'title posterUrl') // Populate movie title/poster
                                     .sort({ createdAt: -1 });
         res.status(200).json(reviews);
     } catch (err) {
@@ -43,6 +81,10 @@ exports.getMyReviews = async (req, res) => {
     }
 };
 
+
+// @desc    Create a new review for a movie
+// @route   POST /api/movies/:movieId/reviews
+// @access  Private
 exports.createReview = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -58,26 +100,26 @@ exports.createReview = async (req, res) => {
     }
 
     try {
-        
+        // 1. Check if movie exists
         const movieExists = await Movie.findById(movieId);
         if (!movieExists) {
              return res.status(404).json({ msg: 'Movie not found' });
         }
 
-        
+        // 2. Check if user has already reviewed this movie
         const existingReview = await Review.findOne({ movie: movieId, user: userId });
         if (existingReview) {
             return res.status(400).json({ msg: 'You have already submitted a review for this movie' });
         }
 
-        
-        
+        // 3. **Constraint Check:** Verify if the user has a confirmed booking for this movie
+        // Find showtimes for this movie
         const showtimeIds = await Showtime.find({ movie: movieId }).distinct('_id');
         if (showtimeIds.length === 0) {
-            
+            // Technically shouldn't happen if movie exists, but safety check
              return res.status(400).json({ msg: 'No showtimes found for this movie to verify booking.' });
         }
-        
+        // Check if user has a CONFIRMED or CHECKED_IN booking for any of these showtimes
         const userBooking = await Booking.findOne({
             user: userId,
             showtime: { $in: showtimeIds },
@@ -88,7 +130,7 @@ exports.createReview = async (req, res) => {
             return res.status(403).json({ msg: 'You must have a confirmed booking for this movie to leave a review.' });
         }
 
-        
+        // 4. Create and save the new review
         const newReview = new Review({
             rating,
             comment,
@@ -96,16 +138,16 @@ exports.createReview = async (req, res) => {
             movie: movieId
         });
 
-        const review = await newReview.save(); 
+        const review = await newReview.save(); // Post-save hook will trigger average calculation
 
-        
+        // Populate user name for the response
         const populatedReview = await Review.findById(review._id).populate('user', 'name');
 
         res.status(201).json(populatedReview);
 
     } catch (err) {
         console.error('Error creating review:', err.message);
-         
+         // Handle potential duplicate key error if index constraint fails unexpectedly
         if (err.code === 11000) {
              return res.status(400).json({ msg: 'You have already submitted a review for this movie (duplicate key).' });
         }
@@ -113,6 +155,10 @@ exports.createReview = async (req, res) => {
     }
 };
 
+
+// @desc    Update a review written by the user
+// @route   PUT /api/reviews/:reviewId
+// @access  Private
 exports.updateReview = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -134,19 +180,19 @@ exports.updateReview = async (req, res) => {
             return res.status(404).json({ msg: 'Review not found' });
         }
 
-        
+        // Authorization: Check if the logged-in user owns this review
         if (review.user.toString() !== userId) {
             return res.status(403).json({ msg: 'User not authorized to update this review' });
         }
 
-        
+        // Update fields
         if (rating !== undefined) review.rating = rating;
         if (comment !== undefined) review.comment = comment;
 
-        
+        // Save updated review (post-save hook triggers recalculation)
         await review.save();
 
-         
+         // Populate user name for the response
         const populatedReview = await Review.findById(review._id).populate('user', 'name');
 
         res.status(200).json(populatedReview);
@@ -157,6 +203,10 @@ exports.updateReview = async (req, res) => {
     }
 };
 
+
+// @desc    Delete a review
+// @route   DELETE /api/reviews/:reviewId
+// @access  Private (Owner or Admin)
 exports.deleteReview = async (req, res) => {
     const reviewId = req.params.reviewId;
     const userId = req.user.id;
@@ -173,12 +223,12 @@ exports.deleteReview = async (req, res) => {
             return res.status(404).json({ msg: 'Review not found' });
         }
 
-        
+        // Authorization: Allow Admin OR the user who wrote the review
         if (review.user.toString() !== userId && userRole !== 'admin') {
              return res.status(403).json({ msg: 'User not authorized to delete this review' });
         }
 
-        
+        // Use .remove() to trigger the 'remove' middleware hooks for recalculation
         await review.remove();
 
         res.status(200).json({ success: true, msg: 'Review deleted successfully' });
@@ -189,6 +239,9 @@ exports.deleteReview = async (req, res) => {
     }
 };
 
+// @desc    Like a review
+// @route   POST /api/reviews/:reviewId/like
+// @access  Private
 exports.likeReview = async (req, res) => {
     const reviewId = req.params.reviewId;
     const userId = req.user.id;
@@ -203,12 +256,12 @@ exports.likeReview = async (req, res) => {
             return res.status(404).json({ msg: 'Review not found' });
         }
 
-        
+        // Remove from dislikes if present, then add to likes if not already present
         await Review.updateOne(
             { _id: reviewId },
             { 
                 $pull: { dislikes: userId },
-                $addToSet: { likes: userId } 
+                $addToSet: { likes: userId } // $addToSet prevents duplicates
             }
         );
 
@@ -221,6 +274,9 @@ exports.likeReview = async (req, res) => {
     }
 };
 
+// @desc    Dislike a review
+// @route   POST /api/reviews/:reviewId/dislike
+// @access  Private
 exports.dislikeReview = async (req, res) => {
     const reviewId = req.params.reviewId;
     const userId = req.user.id;
@@ -235,7 +291,7 @@ exports.dislikeReview = async (req, res) => {
             return res.status(404).json({ msg: 'Review not found' });
         }
 
-        
+        // Remove from likes if present, then add to dislikes if not already present
         await Review.updateOne(
             { _id: reviewId },
             { 
@@ -253,6 +309,9 @@ exports.dislikeReview = async (req, res) => {
     }
 };
 
+// @desc    Report a review
+// @route   POST /api/reviews/:reviewId/report
+// @access  Private
 exports.reportReview = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -273,13 +332,13 @@ exports.reportReview = async (req, res) => {
             return res.status(404).json({ msg: 'Review not found' });
         }
 
-        
+        // Check if user has already reported this review
         const hasReported = review.reports.some(report => report.user.toString() === userId);
         if (hasReported) {
             return res.status(400).json({ msg: 'You have already reported this review.' });
         }
 
-        
+        // Add the new report
         review.reports.push({ user: userId, reason: reason, status: 'pending' });
         await review.save();
 

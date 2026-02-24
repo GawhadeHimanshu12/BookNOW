@@ -1,4 +1,4 @@
-
+// client/src/pages/BookingPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { getShowtimeSeatmapApi, getShowtimeByIdApi } from '../api/showtimes';
@@ -104,7 +104,7 @@ const BookingPage = () => {
             const paymentOrder = await createPaymentOrderApi(pendingBooking._id);
 
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID, // This line reads from your .env file
                 amount: paymentOrder.amount,
                 currency: paymentOrder.currency,
                 name: "BookNOW",

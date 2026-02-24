@@ -1,3 +1,4 @@
+// client/src/components/admin/PromoCodeManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAllPromoCodesAdminApi, createPromoCodeAdminApi, updatePromoCodeAdminApi, deletePromoCodeAdminApi } from '../../api/admin';
 import {

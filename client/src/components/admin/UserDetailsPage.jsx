@@ -1,3 +1,4 @@
+// client/src/pages/admin/UserDetailsPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import { getUserByIdAdminApi, getAllBookingsAdminApi } from '../../api/admin';
@@ -23,10 +24,10 @@ const UserDetailsPage = () => {
         setIsLoading(true);
         setError(null);
         try {
-            
+            // Fetch user details and their bookings in parallel
             const [userData, bookingsData] = await Promise.all([
                 getUserByIdAdminApi(userId),
-                getAllBookingsAdminApi({ userId: userId, limit: 100 }) 
+                getAllBookingsAdminApi({ userId: userId, limit: 100 }) // Fetch up to 100 bookings for this user
             ]);
             
             setUser(userData);

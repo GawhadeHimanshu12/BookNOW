@@ -1,10 +1,10 @@
-
+// File: /client/src/pages/organizer/OrganizerVenueFormPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createVenueApi, getVenueByIdApi, updateVenueApi } from '../../api/venues';
 import {
     Container, Typography, Box, Paper, TextField, Button, Grid, CircularProgress, Alert,
-    FormGroup, FormControlLabel, Checkbox, IconButton, List, ListItem, ListItemText, Divider, Chip 
+    FormGroup, FormControlLabel, Checkbox, IconButton, List, ListItem, ListItemText, Divider, Chip // Added Chip
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,7 +24,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
     const { venueId } = useParams();
     const [venueData, setVenueData] = useState(initialVenueState);
     const [currentScreen, setCurrentScreen] = useState(initialScreenState);
-    const [facilityInput, setFacilityInput] = useState(''); 
+    const [facilityInput, setFacilityInput] = useState(''); // State for the facility input field
     const [isLoading, setIsLoading] = useState(false);
     const [formError, setFormError] = useState(null);
     const [pageTitle, setPageTitle] = useState('Add New Venue');
@@ -67,7 +67,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
         }));
     };
 
-    
+    // --- CORRECTED FACILITY HANDLING ---
     const handleFacilityInputChange = (e) => {
         setFacilityInput(e.target.value);
     };
@@ -80,7 +80,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
                 facilities: [...prev.facilities, newFacility]
             }));
         }
-        setFacilityInput(''); 
+        setFacilityInput(''); // Clear input field after adding
     };
 
     const handleFacilityRemove = (facilityToRemove) => {
@@ -89,7 +89,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
             facilities: prev.facilities.filter(f => f !== facilityToRemove)
         }));
     };
-    
+    // --- END OF CORRECTED FACILITY HANDLING ---
 
     const handleScreenChange = (e) => {
         const { name, value } = e.target;
@@ -150,10 +150,10 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
             screens: venueData.screens.map(s => ({
                 name: s.name,
                 capacity: parseInt(s.capacity, 10),
-                seatLayout: s.seatLayout, 
+                seatLayout: s.seatLayout, // seatLayout is already an object
             }))
         };
-        
+        // No need to delete seatLayoutInput from payload as it's not part of venueData.screens objects being submitted
 
         try {
             if (mode === 'edit') {
@@ -207,12 +207,12 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
                                 <TextField
                                     label="Add Facility (e.g., Parking, F&B)"
                                     value={facilityInput}
-                                    onChange={handleFacilityInputChange} 
+                                    onChange={handleFacilityInputChange} // Use specific handler for facility input
                                     size="small"
                                     sx={{flexGrow: 1, mr: 1}}
-                                    onKeyPress={(e) => { 
+                                    onKeyPress={(e) => { // Optional: Add facility on Enter key
                                         if (e.key === 'Enter') {
-                                            e.preventDefault(); 
+                                            e.preventDefault(); // Prevent form submission
                                             handleFacilityAdd();
                                         }
                                     }}
@@ -220,7 +220,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
                                 <Button variant="outlined" onClick={handleFacilityAdd} startIcon={<AddCircleOutlineIcon />}>Add</Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1, p: 1, border: venueData.facilities.length > 0 ? '1px dashed grey' : 'none', borderRadius: 1, minHeight: venueData.facilities.length > 0 ? 'auto' : '0px' }}>
-                                {venueData.facilities.map((facility, index) => ( 
+                                {venueData.facilities.map((facility, index) => ( // Added index for key just in case of duplicate facility names during input, though Set would prevent it
                                     <Chip 
                                         key={`${facility}-${index}`} 
                                         label={facility} 

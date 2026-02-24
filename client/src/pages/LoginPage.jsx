@@ -1,8 +1,8 @@
-
-import React, { useState, useEffect } from 'react'; 
+// File: /client/src/pages/LoginPage.jsx
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-
+// MUI Components
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -15,38 +15,38 @@ import Paper from '@mui/material/Paper';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const { login, isLoading, authError, setAuthError } = useAuth(); 
+  const { login, googleLogin, isLoading, authError, setAuthError } = useAuth(); // Get error setter
   const navigate = useNavigate();
 
-  
+  // Clear authError when component mounts or unmounts
   useEffect(() => {
-      setAuthError(null); 
+      setAuthError(null); // Clear on mount
       return () => {
-          setAuthError(null); 
+          setAuthError(null); // Clear on unmount
       };
   }, [setAuthError]);
 
 
   const handleChange = (e) => {
-    setAuthError(null); 
+    setAuthError(null); // Clear error when user types
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setAuthError(null); 
+    setAuthError(null); // Clear previous errors before attempt
     if (!formData.email || !formData.password) {
-        setAuthError("Please enter both email and password."); 
+        setAuthError("Please enter both email and password."); // Use authError for consistency
         return;
     }
-    
-    
+
+    // The login function in context now returns true/false and handles errors internally
     const success = await login(formData);
     if (success) {
         console.log("Login successful, navigating...");
-        navigate('/'); 
+        navigate('/'); // Only navigate on true success
     } else {
-        
+        // Error message should already be set in authError state by the context
         console.log("Login failed, error message should be displayed.");
     }
   };
@@ -79,6 +79,14 @@ const LoginPage = () => {
             sx={{ mt: 3, mb: 2 }} disabled={isLoading}
           >
             {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+          </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={googleLogin}
+            sx={{ mb: 2 }}
+          >
+            Sign In with Google
           </Button>
           <Box sx={{ textAlign: 'center' }}>
             <Link component={RouterLink} to="/register" variant="body2" color="error">

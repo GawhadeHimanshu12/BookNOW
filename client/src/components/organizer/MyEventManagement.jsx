@@ -1,3 +1,4 @@
+// client/src/components/organizer/MyEventManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyEventsApi } from '../../api/organizer';
@@ -36,7 +37,7 @@ const MyEventManagement = () => {
     }, [fetchMyEvents]);
 
     const handleAddNewEvent = () => {
-        
+        // Navigate to a dedicated form page for creating events
         navigate('/organizer/events/new');
     };
 
@@ -48,7 +49,7 @@ const MyEventManagement = () => {
         if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
             try {
                 await deleteEventApi(eventId);
-                fetchMyEvents(); 
+                fetchMyEvents(); // Refresh list after deletion
             } catch (err) {
                 alert(`Failed to delete event: ${err.message || 'Server error'}`);
             }

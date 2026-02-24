@@ -1,3 +1,6 @@
+// File: /server/controllers/adminController.js
+// Purpose: Contains logic for handling administrative actions.
+
 const User = require('../models/User');
 const PromoCode = require('../models/PromoCode');
 const Booking = require('../models/Booking');
@@ -11,8 +14,12 @@ const Review = require('../models/Review');
 const City = require('../models/City');
 const sendEmail = require('../utils/sendEmail');
 
+
+// @desc    Get all users (with optional filtering by role)
+// @route   GET /api/admin/users
+// @access  Private (Admin Only)
 exports.getAllUsers = async (req, res) => {
-    const { role } = req.query; 
+    const { role } = req.query; // Allow filtering like /api/admin/users?role=organizer
     const query = {};
     if (role && ['user', 'organizer', 'admin'].includes(role)) {
         query.role = role;
@@ -27,9 +34,9 @@ exports.getAllUsers = async (req, res) => {
     }
 };
 
-
-
-
+// @desc    Get a single user by ID
+// @route   GET /api/admin/users/:id
+// @access  Private (Admin Only)
 exports.getUserById = async (req, res) => {
     const userId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -50,9 +57,9 @@ exports.getUserById = async (req, res) => {
 };
 
 
-
-
-
+// @desc    Approve a pending organizer account
+// @route   PUT /api/admin/organizers/:id/approve
+// @access  Private (Admin Only)
 exports.approveOrganizer = async (req, res) => {
     const organizerId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(organizerId)) {
@@ -81,9 +88,9 @@ exports.approveOrganizer = async (req, res) => {
 };
 
 
-
-
-
+// @desc    Update user details (e.g., change role, name - use with caution)
+// @route   PUT /api/admin/users/:id
+// @access  Private (Admin Only)
 exports.updateUser = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -137,9 +144,9 @@ exports.updateUser = async (req, res) => {
 };
 
 
-
-
-
+// @desc    Delete a user (Use with extreme caution!)
+// @route   DELETE /api/admin/users/:id
+// @access  Private (Admin Only)
 exports.deleteUser = async (req, res) => {
     const userId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -161,11 +168,11 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+// --- Promo Code Management ---
 
-
-
-
-
+// @desc    Get all promo codes
+// @route   GET /api/admin/promocodes
+// @access  Private (Admin Only)
 exports.getAllPromoCodes = async (req, res) => {
     try {
         const promoCodes = await PromoCode.find().sort({ createdAt: -1 });
@@ -176,9 +183,9 @@ exports.getAllPromoCodes = async (req, res) => {
     }
 };
 
-
-
-
+// @desc    Get a single promo code by ID
+// @route   GET /api/admin/promocodes/:id
+// @access  Private (Admin Only)
 exports.getPromoCodeById = async (req, res) => {
      if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(400).json({ msg: 'Invalid Promo Code ID format' });
@@ -196,22 +203,22 @@ exports.getPromoCodeById = async (req, res) => {
 };
 
 
-
-
-
+// @desc    Create a new promo code
+// @route   POST /api/admin/promocodes
+// @access  Private (Admin Only)
 exports.createPromoCode = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    
+    // Convert code to uppercase before saving/checking
     if (req.body.code) {
         req.body.code = req.body.code.toUpperCase();
     }
 
     try {
-        
+        // Check if code already exists
         const existingCode = await PromoCode.findOne({ code: req.body.code });
         if (existingCode) {
             return res.status(400).json({ errors: [{ msg: 'Promo code already exists' }]});
@@ -221,15 +228,15 @@ exports.createPromoCode = async (req, res) => {
         res.status(201).json(promoCode);
     } catch (err) {
         console.error('Error creating promo code:', err.message);
-        
+        // Handle validation errors etc.
         res.status(500).json({ msg: `Server error: ${err.message}` });
     }
 };
 
 
-
-
-
+// @desc    Update a promo code
+// @route   PUT /api/admin/promocodes/:id
+// @access  Private (Admin Only)
 exports.updatePromoCode = async (req, res) => {
      const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -240,20 +247,20 @@ exports.updatePromoCode = async (req, res) => {
         return res.status(400).json({ msg: 'Invalid Promo Code ID format' });
     }
 
-    
+    // Prevent changing the code itself? Or validate uniqueness if changed.
     if (req.body.code) {
-        delete req.body.code; 
-        
+        delete req.body.code; // Typically code shouldn't be updated, only other fields
+        // Or add logic to check uniqueness if allowing code change
     }
      if (req.body.uses) {
-        delete req.body.uses; 
+        delete req.body.uses; // Prevent manually setting uses count via update
     }
 
 
     try {
         const promoCode = await PromoCode.findByIdAndUpdate(req.params.id, req.body, {
-            new: true, 
-            runValidators: true 
+            new: true, // Return the updated document
+            runValidators: true // Run schema validations on update
         });
 
         if (!promoCode) {
@@ -267,9 +274,9 @@ exports.updatePromoCode = async (req, res) => {
 };
 
 
-
-
-
+// @desc    Delete a promo code
+// @route   DELETE /api/admin/promocodes/:id
+// @access  Private (Admin Only)
 exports.deletePromoCode = async (req, res) => {
      if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(400).json({ msg: 'Invalid Promo Code ID format' });
@@ -280,7 +287,7 @@ exports.deletePromoCode = async (req, res) => {
             return res.status(404).json({ msg: 'Promo code not found' });
         }
 
-        
+        // Consider if codes with uses should be deletable or just deactivated
         await promoCode.remove();
         res.status(200).json({ success: true, msg: 'Promo code deleted' });
 
@@ -291,7 +298,7 @@ exports.deletePromoCode = async (req, res) => {
 };
 
 
-
+// --- Booking Management ---
 /**
  * @desc    Get all bookings (Admin access, with filters)
  * @route   GET /api/admin/bookings
@@ -302,7 +309,7 @@ exports.getAllBookings = async (req, res) => {
         const { userId, showtimeId, movieId, eventId, venueId, date, status, sort, bookingRefId } = req.query;
         const query = {};
 
-        
+        // --- 1. Build the primary query object for the 'Booking' collection ---
         if (userId && mongoose.Types.ObjectId.isValid(userId)) {
             query.user = userId;
         }
@@ -313,30 +320,30 @@ exports.getAllBookings = async (req, res) => {
             query.bookingRefId = bookingRefId.trim().toUpperCase();
         }
 
-        
-        
+        // --- 2. Handle filtering by showtime properties (movie, event, venue) ---
+        // If a specific showtimeId is provided, use it directly.
         if (showtimeId && mongoose.Types.ObjectId.isValid(showtimeId)) {
             query.showtime = showtimeId;
         } else {
-            
+            // Otherwise, build a sub-query to find relevant showtime IDs first.
             const showtimeSubQuery = {};
             if (movieId && mongoose.Types.ObjectId.isValid(movieId)) showtimeSubQuery.movie = movieId;
             if (eventId && mongoose.Types.ObjectId.isValid(eventId)) showtimeSubQuery.event = eventId;
             if (venueId && mongoose.Types.ObjectId.isValid(venueId)) showtimeSubQuery.venue = venueId;
 
-            
+            // If any of those filters exist, find the corresponding showtimes.
             if (Object.keys(showtimeSubQuery).length > 0) {
                 const relevantShowtimeIds = await Showtime.find(showtimeSubQuery).distinct('_id');
-                
+                // If no showtimes match, there can be no bookings. Return early.
                 if (relevantShowtimeIds.length === 0) {
                     return res.status(200).json({ success: true, count: 0, total: 0, pagination: {}, data: [] });
                 }
-                
+                // Add the list of showtime IDs to the main query.
                 query.showtime = { $in: relevantShowtimeIds };
             }
         }
 
-        
+        // --- 3. Handle date filtering ---
         if (date) {
             try {
                 const startDate = dayjs(date).startOf('day').toDate();
@@ -347,36 +354,36 @@ exports.getAllBookings = async (req, res) => {
             }
         }
 
-        
-        let sortOptions = { bookingTime: -1 }; 
+        // --- 4. Define sorting options ---
+        let sortOptions = { bookingTime: -1 }; // Default sort
         if (sort) {
-            
+            // Add custom sort logic here if needed, e.g., switch(sort) { ... }
         }
 
-        
+        // --- 5. Handle pagination ---
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 20;
         const startIndex = (page - 1) * limit;
 
-        
+        // --- 6. Execute queries for total count and paginated data ---
         const total = await Booking.countDocuments(query);
 
         const bookings = await Booking.find(query)
             .populate('user', 'name email')
             .populate({
-                path: 'showtime', 
-                select: 'startTime movie event venue screenName', 
+                path: 'showtime', // Populate the showtime document
+                select: 'startTime movie event venue screenName', // Select desired fields
                 populate: [
                     {
-                        path: 'venue', 
+                        path: 'venue', // Nested populate for venue
                         select: 'name'
                     },
                     {
-                        path: 'movie', 
+                        path: 'movie', // Nested populate for movie (will be null if not a movie showtime)
                         select: 'title'
                     },
                     {
-                        path: 'event', 
+                        path: 'event', // Nested populate for event (will be null if not an event showtime)
                         select: 'title'
                     }
                 ]
@@ -385,9 +392,9 @@ exports.getAllBookings = async (req, res) => {
             .sort(sortOptions)
             .skip(startIndex)
             .limit(limit)
-            .lean(); 
+            .lean(); // Use .lean() for faster read-only queries
 
-        
+        // --- 7. Construct pagination object for the response ---
         const pagination = {};
         if ((startIndex + limit) < total) {
             pagination.next = { page: page + 1, limit };
@@ -396,12 +403,12 @@ exports.getAllBookings = async (req, res) => {
             pagination.prev = { page: page - 1, limit };
         }
 
-        
+        // --- 8. Send the final response ---
         res.status(200).json({ success: true, count: bookings.length, total, pagination, data: bookings });
 
     } catch (err) {
         console.error('Error fetching all bookings (Admin):', err);
-        
+        // Handle specific Mongoose errors if necessary
         if (err.name === 'StrictPopulateError') {
             console.error('StrictPopulateError Path:', err.path);
         }
@@ -411,9 +418,9 @@ exports.getAllBookings = async (req, res) => {
 
 
 
-
-
-
+// @desc    Get a single booking by ID (Admin access)
+// @route   GET /api/admin/bookings/:id
+// @access  Private (Admin Only)
 exports.getBookingByIdAdmin = async (req, res) => {
     const bookingId = req.params.id;
 
@@ -423,6 +430,7 @@ exports.getBookingByIdAdmin = async (req, res) => {
 
     try {
         const booking = await Booking.findById(bookingId)
+            .select('+qrCodeData') // *** THIS IS THE FIX ***
             .populate('user', 'name email role')
             .populate({
                 path: 'showtime',
@@ -452,14 +460,14 @@ exports.getBookingByIdAdmin = async (req, res) => {
 };
 
 
+// --- Platform Statistics ---
 
-
-
-
-
+// @desc    Get platform-wide statistics
+// @route   GET /api/admin/stats
+// @access  Private (Admin Only)
 exports.getPlatformStats = async (req, res) => {
     try {
-        
+        // Use Promise.all to run counts in parallel for efficiency
         const [
             totalUsers,
             totalOrganizers,
@@ -472,7 +480,7 @@ exports.getPlatformStats = async (req, res) => {
             confirmedBookings,
             totalPromoCodes,
             activePromoCodes,
-            revenueData 
+            revenueData // Array from aggregation pipeline
         ] = await Promise.all([
             User.countDocuments(),
             User.countDocuments({ role: 'organizer' }),
@@ -485,17 +493,17 @@ exports.getPlatformStats = async (req, res) => {
             Booking.countDocuments({ status: 'Confirmed' }),
             PromoCode.countDocuments(),
             PromoCode.countDocuments({ isActive: true }),
-            
+            // Simulate total revenue from confirmed bookings
             Booking.aggregate([
-                { $match: { status: 'Confirmed' } }, 
+                { $match: { status: 'Confirmed' } }, // Only confirmed bookings
                 { $group: {
-                    _id: null, 
-                    totalRevenue: { $sum: '$totalAmount' } 
+                    _id: null, // Group all documents together
+                    totalRevenue: { $sum: '$totalAmount' } // Sum the final amount paid
                  }}
             ])
         ]);
 
-        
+        // Extract total revenue from aggregation result (if any bookings exist)
         const simulatedTotalRevenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
 
         res.status(200).json({
@@ -505,7 +513,7 @@ exports.getPlatformStats = async (req, res) => {
                     total: totalUsers,
                     organizers: totalOrganizers,
                     approvedOrganizers: approvedOrganizers,
-                    regularUsers: totalUsers - totalOrganizers 
+                    regularUsers: totalUsers - totalOrganizers // Calculated
                 },
                 content: {
                     movies: totalMovies,
@@ -516,14 +524,14 @@ exports.getPlatformStats = async (req, res) => {
                 bookings: {
                     total: totalBookings,
                     confirmed: confirmedBookings
-                    
+                    // Add counts for other statuses if needed
                 },
                 promoCodes: {
                     total: totalPromoCodes,
                     active: activePromoCodes
                 },
-                financials: { 
-                    simulatedTotalRevenue: simulatedTotalRevenue.toFixed(2) 
+                financials: { // Note: Based on simulated payments
+                    simulatedTotalRevenue: simulatedTotalRevenue.toFixed(2) // Format to 2 decimal places
                 }
             }
         });
@@ -534,55 +542,55 @@ exports.getPlatformStats = async (req, res) => {
     }
 };
 
+// --- Review Management (Admin) ---
 
-
-
-
-
+// @desc    Get all reviews (Admin access, with filters)
+// @route   GET /api/admin/reviews?userId=...&movieId=...&rating=5&page=1&limit=20
+// @access  Private (Admin Only)
 exports.getAllReviewsAdmin = async (req, res) => {
     try {
         const { userId, movieId, rating, sort } = req.query;
         const query = {};
 
-        
+        // --- Filtering ---
         if (userId && mongoose.Types.ObjectId.isValid(userId)) query.user = userId;
         if (movieId && mongoose.Types.ObjectId.isValid(movieId)) query.movie = movieId;
         if (rating) {
             const numericRating = parseInt(rating, 10);
-            if (!isNaN(numericRating) && numericRating >= 1 && numericRating <= 5) { 
+            if (!isNaN(numericRating) && numericRating >= 1 && numericRating <= 5) { // Adjust max if scale is different
                 query.rating = numericRating;
             }
         }
 
-        
-        let sortOptions = { createdAt: -1 }; 
+        // --- Sorting ---
+        let sortOptions = { createdAt: -1 }; // Default: newest reviews first
         if (sort) {
             switch (sort) {
                 case 'createdAt_asc': sortOptions = { createdAt: 1 }; break;
                 case 'rating_desc': sortOptions = { rating: -1, createdAt: -1 }; break;
                 case 'rating_asc': sortOptions = { rating: 1, createdAt: -1 }; break;
-                
+                // Add more sort options if needed
             }
         }
 
-        
+        // --- Pagination ---
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 20;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
 
-        
+        // Get total count matching the query
         const total = await Review.countDocuments(query);
 
-        
+        // Execute query
         const reviews = await Review.find(query)
-            .populate('user', 'name email') 
-            .populate('movie', 'title') 
+            .populate('user', 'name email') // Populate user info
+            .populate('movie', 'title') // Populate movie title
             .sort(sortOptions)
             .skip(startIndex)
             .limit(limit);
 
-        
+        // Pagination result
         const pagination = {};
         if (endIndex < total) pagination.next = { page: page + 1, limit };
         if (startIndex > 0) pagination.prev = { page: page - 1, limit };
@@ -596,16 +604,16 @@ exports.getAllReviewsAdmin = async (req, res) => {
 };
 
 
-
-
-
+// @desc    Get all reviews with pending reports
+// @route   GET /api/admin/reviews/reported
+// @access  Private (Admin Only)
 exports.getReportedReviewsAdmin = async (req, res) => {
     try {
-        
+        // Find reviews that have at least one report with 'pending' status
         const reportedReviews = await Review.find({ 'reports.status': 'pending' })
-            .populate('user', 'name email') 
-            .populate('movie', 'title') 
-            .populate('reports.user', 'name email') 
+            .populate('user', 'name email') // Who wrote the review
+            .populate('movie', 'title') // Which movie the review is for
+            .populate('reports.user', 'name email') // Who reported the review
             .sort({ createdAt: -1 });
 
         res.status(200).json(reportedReviews);
@@ -615,12 +623,12 @@ exports.getReportedReviewsAdmin = async (req, res) => {
     }
 };
 
-
-
-
+// @desc    Resolve a report on a review (delete review or dismiss report)
+// @route   PUT /api/admin/reviews/:reviewId/resolve
+// @access  Private (Admin Only)
 exports.resolveReportedReviewAdmin = async (req, res) => {
     const { reviewId } = req.params;
-    const { action } = req.body; 
+    const { action } = req.body; // 'delete' or 'dismiss'
 
     if (!mongoose.Types.ObjectId.isValid(reviewId)) {
         return res.status(400).json({ msg: 'Invalid Review ID format' });
@@ -637,11 +645,11 @@ exports.resolveReportedReviewAdmin = async (req, res) => {
         }
 
         if (action === 'delete') {
-            
+            // This will trigger the pre('remove') hook to recalculate the movie's average rating
             await review.remove();
             res.status(200).json({ success: true, msg: 'Review deleted successfully.' });
         } else if (action === 'dismiss') {
-            
+            // Mark all pending reports as resolved
             await Review.updateOne(
                 { _id: reviewId, 'reports.status': 'pending' },
                 { $set: { 'reports.$[].status': 'resolved' } }
@@ -654,15 +662,15 @@ exports.resolveReportedReviewAdmin = async (req, res) => {
     }
 };
 
+// --- City Management (Admin) ---
 
-
-
-
-
+// @desc    Get all cities (for admin management)
+// @route   GET /api/admin/cities
+// @access  Private (Admin Only)
 exports.getAllCitiesAdmin = async (req, res) => {
     try {
-        
-        const cities = await City.find().sort({ state: 1, name: 1 }); 
+        // Admin gets all cities, regardless of isActive status
+        const cities = await City.find().sort({ state: 1, name: 1 }); // Sort by state then name
         res.status(200).json(cities);
     } catch (err) {
         console.error('Error fetching cities (Admin):', err.message);
@@ -670,9 +678,9 @@ exports.getAllCitiesAdmin = async (req, res) => {
     }
 };
 
-
-
-
+// @desc    Create a new city
+// @route   POST /api/admin/cities
+// @access  Private (Admin Only)
 exports.createCity = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -682,7 +690,7 @@ exports.createCity = async (req, res) => {
     const { name, state, isActive } = req.body;
 
     try {
-        
+        // Check if city already exists (case-insensitive check might be better)
         let city = await City.findOne({ name: new RegExp(`^${name}$`, 'i') });
         if (city) {
             return res.status(400).json({ errors: [{ msg: 'City already exists' }]});
@@ -697,9 +705,9 @@ exports.createCity = async (req, res) => {
     }
 };
 
-
-
-
+// @desc    Update a city (e.g., change state, activate/deactivate)
+// @route   PUT /api/admin/cities/:id
+// @access  Private (Admin Only)
 exports.updateCity = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -712,12 +720,12 @@ exports.updateCity = async (req, res) => {
 
     const { name, state, isActive } = req.body;
     const updateData = {};
-    if (name) updateData.name = name; 
+    if (name) updateData.name = name; // Allow renaming? Check for uniqueness if allowing.
     if (state) updateData.state = state;
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
 
     try {
-        
+        // Optional: Add check here if renaming to ensure new name doesn't already exist
 
         const city = await City.findByIdAndUpdate(req.params.id, updateData, {
             new: true,
@@ -735,25 +743,25 @@ exports.updateCity = async (req, res) => {
     }
 };
 
-
-
-
+// @desc    Delete a city
+// @route   DELETE /api/admin/cities/:id
+// @access  Private (Admin Only)
 exports.deleteCity = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(400).json({ msg: 'Invalid City ID format' });
     }
     try {
-        
-        
-        
+        // --- CORRECTED LOGIC ---
+        // Use the static findByIdAndDelete method instead of fetching then removing.
+        // This is the modern, correct way and avoids the ".remove() is not a function" error.
         const city = await City.findByIdAndDelete(req.params.id);
         
         if (!city) {
             return res.status(404).json({ msg: 'City not found' });
         }
 
-        
-        
+        // TODO: Add dependency checks? Are any venues using this city?
+        // For now, deletion proceeds.
 
         res.status(200).json({ success: true, msg: 'City deleted successfully' });
 
@@ -764,12 +772,12 @@ exports.deleteCity = async (req, res) => {
 };
 
 
+// --- Booking Management (Admin - Continued) ---
 
-
-
-
-
-
+// @desc    Cancel any booking by ID (Admin access)
+// @route   PUT /api/admin/bookings/:id/cancel
+// @access  Private (Admin Only)
+// cancelAnyBookingAdmin - Ensure this is also reviewed if it uses similar populates
 exports.cancelAnyBookingAdmin = async (req, res) => {
     const bookingId = req.params.id;
     const adminUserId = req.user.id;
@@ -778,20 +786,20 @@ exports.cancelAnyBookingAdmin = async (req, res) => {
         return res.status(400).json({ msg: 'Invalid Booking ID format' });
     }
 
-    const mongoSession = await mongoose.startSession(); 
+    const mongoSession = await mongoose.startSession(); // Renamed to avoid conflict with HTTP session
 
     try {
         mongoSession.startTransaction();
 
         const bookingToCancel = await Booking.findById(bookingId)
-            
+            // Populate necessary fields for logic and email, lean can be used here too
             .populate('user', 'name email')
             .populate({
                 path: 'showtime',
-                select: 'startTime movie event venue seats', 
+                select: 'startTime movie event venue seats', // Need seats for $pullAll
             })
             .session(mongoSession)
-            .lean(); 
+            .lean(); // Use lean if performing manual sub-population
 
         if (!bookingToCancel) {
             await mongoSession.abortTransaction(); mongoSession.endSession();
@@ -805,10 +813,10 @@ exports.cancelAnyBookingAdmin = async (req, res) => {
 
         const originalStatus = bookingToCancel.status;
 
-        
+        // Update booking status directly
         await Booking.updateOne(
             { _id: bookingId },
-            { $set: { status: 'Cancelled' } },
+            { $set: { status: 'Cancelled' /*, notes: `Cancelled by Admin ${adminUserId} on ${new Date()}` */ } },
             { session: mongoSession }
         );
 
@@ -830,7 +838,7 @@ exports.cancelAnyBookingAdmin = async (req, res) => {
         await mongoSession.commitTransaction();
         mongoSession.endSession();
 
-        
+        // Fetch the fully populated booking for the email and response AFTER transaction
         const finalBookingDetails = await Booking.findById(bookingId)
             .populate('user', 'name email')
             .populate({

@@ -1,3 +1,4 @@
+// File: /client/src/pages/WriteReviewPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { getMovieByIdApi, checkReviewEligibilityApi } from '../api/movies';

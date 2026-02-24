@@ -1,3 +1,6 @@
+// server/models/Event.js
+// Purpose: Defines the schema for the Event collection.
+
 const mongoose = require('mongoose');
 
 const EventSchema = new mongoose.Schema({
@@ -5,7 +8,7 @@ const EventSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add an event title'],
         trim: true,
-        unique: true 
+        unique: true
     },
     description: {
         type: String,
@@ -15,7 +18,7 @@ const EventSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please specify a category'],
         trim: true,
-
+        index: true
     },
     eventLanguage: {
         type: String,
@@ -24,7 +27,6 @@ const EventSchema = new mongoose.Schema({
     venue: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Venue',
-        
     },
     address: { 
         street: { type: String, trim: true },
@@ -35,29 +37,27 @@ const EventSchema = new mongoose.Schema({
     startDate: { 
         type: Date,
         required: [true, 'Please specify the start date and time'],
-        
+        index: true
     },
     endDate: { 
         type: Date,
-        
     },
     imageUrl: { 
         type: String,
-        match: [/^(http|https):\/\/[^ "]+$/, 'Please use a valid URL']
+        validate: {
+            validator: function(v) {
+                if (!v) return true; // Optional field
+                return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v);
+            },
+            message: 'Please use a valid URL'
+        }
     },
     tags: [{ 
         type: String,
         trim: true,
         lowercase: true
     }],
-    organizerInfo: { 
-        name: { type: String, trim: true },
-        contact: { type: String, trim: true }
-        
-        
-    },
-    
-    
+    // FIX: Removed 'organizerInfo'. Use populate('organizer') to get current details.
     
     status: { 
         type: String,
@@ -76,13 +76,11 @@ const EventSchema = new mongoose.Schema({
     }
 });
 
-
+// Text Search Index
 EventSchema.index({ title: 'text', description: 'text' });
 
+// Compound Index for common "Upcoming Events" queries
+EventSchema.index({ status: 1, startDate: 1 });
+EventSchema.index({ 'address.city': 1, status: 1 });
 
-EventSchema.index({ category: 1 });        
-EventSchema.index({ 'address.city': 1 }); 
-EventSchema.index({ tags: 1 });           
-EventSchema.index({ startDate: 1 });      
-EventSchema.index({ status: 1 });         
-module.exports = mongoose.model('Event', EventSchema);
+module.exports = mongoose.models.Event || mongoose.model('Event', EventSchema);

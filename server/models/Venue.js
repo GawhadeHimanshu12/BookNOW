@@ -1,4 +1,12 @@
+// server/models/Venue.js
+// Purpose: Defines the schema for the Venue collection, including embedded screens.
+
 const mongoose = require('mongoose');
+
+// Shared Enum for Seat Types (Must match Showtime model)
+const SEAT_TYPES = ['Normal', 'VIP', 'Premium', 'Recliner', 'Wheelchair', 'Luxury', 'Unavailable'];
+
+// Schema for individual screens within a venue
 const ScreenSchema = new mongoose.Schema({
     name: { 
         type: String,
@@ -7,29 +15,40 @@ const ScreenSchema = new mongoose.Schema({
     },
     capacity: {
         type: Number,
-        required: [true, 'Please provide the screen capacity']
+        required: [true, 'Please provide the screen capacity'],
+        min: [1, 'Capacity must be at least 1']
     },
     seatLayout: {
         rows: [{
             _id: false,
-            rowId: { type: String, required: true }, 
+            rowId: { 
+                type: String, 
+                required: true, 
+                uppercase: true,
+                trim: true
+            }, 
             seats: [{
                 _id: false,
                 seatNumber: { type: String, required: true }, 
                 type: {
                     type: String,
                     default: 'Normal',
-                    
-                    enum: ['Normal', 'VIP', 'Premium', 'Recliner', 'Wheelchair', 'Unavailable', 'Luxury']
-
+                    enum: SEAT_TYPES
                 },
             }]
         }],
     }
 });
 
+// Validator: Ensure Row IDs are unique per screen
+ScreenSchema.path('seatLayout.rows').validate(function(rows) {
+    if (!rows) return true;
+    const rowIds = rows.map(r => r.rowId);
+    return new Set(rowIds).size === rowIds.length;
+}, 'Row IDs must be unique within a screen.');
 
 
+// Main schema for the Venue
 const VenueSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -63,12 +82,9 @@ const VenueSchema = new mongoose.Schema({
     }
 });
 
-
-VenueSchema.pre('save', async function(next) {
-    
-    next();
-});
+// Middleware to ensure organizer exists (Optional, depends on preference vs Controller logic)
+// Removed empty pre-save hook to keep code clean.
 
 VenueSchema.index({ name: 'text', 'address.city': 'text', 'address.state': 'text' });
 
-module.exports = mongoose.model('Venue', VenueSchema);
+module.exports = mongoose.models.Venue || mongoose.model('Venue', VenueSchema);

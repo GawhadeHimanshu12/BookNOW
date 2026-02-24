@@ -1,3 +1,6 @@
+// server/models/Movie.js
+// Purpose: Defines the schema for the Movie collection in MongoDB.
+
 const mongoose = require('mongoose');
 
 const MovieSchema = new mongoose.Schema({
@@ -5,7 +8,7 @@ const MovieSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a movie title'],
         trim: true, 
-        unique: true 
+        unique: true
     },
     description: {
         type: String,
@@ -16,8 +19,9 @@ const MovieSchema = new mongoose.Schema({
         required: [true, 'Please add a release date']
     },
     duration: {
-        type: Number, 
-        required: [true, 'Please add the duration in minutes']
+        type: Number, // Duration in minutes
+        required: [true, 'Please add the duration in minutes'],
+        min: [1, 'Duration must be at least 1 minute']
     },
     movieLanguage: {
         type: String,
@@ -39,33 +43,44 @@ const MovieSchema = new mongoose.Schema({
     }],
     posterUrl: { 
         type: String,
-        match: [/^(http|https):\/\/[^ "]+$/, 'Please use a valid URL for poster']
-        
+        validate: {
+            validator: function(v) {
+                if (!v) return true;
+                return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v);
+            },
+            message: 'Please use a valid URL for poster'
+        }
     },
     trailerUrl: { 
         type: String,
-        match: [/^(http|https):\/\/[^ "]+$/, 'Please use a valid URL for trailer']
+        validate: {
+            validator: function(v) {
+                if (!v) return true;
+                return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v);
+            },
+            message: 'Please use a valid URL for trailer'
+        }
     },
     censorRating: {
-        type: String, 
-        trim: true
+        type: String,
+        trim: true,
+        uppercase: true // e.g., 'U/A'
     },
     format: [{ 
         type: String,
         trim: true,
-        
+        uppercase: true // Force '2D', '3D', 'IMAX' consistency
     }],
     averageRating: {
         type: Number,
         min: 0,
-        max: 5, 
+        max: 5,
         default: 0
     },
     numberOfReviews: {
         type: Number,
         default: 0
     },
-
     addedBy: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -77,14 +92,9 @@ const MovieSchema = new mongoose.Schema({
     }
 });
 
-
-MovieSchema.index({ title: 'text', description: 'text' },
-     { default_language: 'english' }
-); 
-
-
-MovieSchema.index({ genre: 1 });      
-MovieSchema.index({ movieLanguage: 1 });   
+MovieSchema.index({ title: 'text', description: 'text' }, { default_language: 'english' });
+MovieSchema.index({ genre: 1 });
+MovieSchema.index({ movieLanguage: 1 });
 MovieSchema.index({ releaseDate: -1 });
-MovieSchema.index({ averageRating: -1 });
-module.exports = mongoose.model('Movie', MovieSchema);
+
+module.exports = mongoose.models.Movie || mongoose.model('Movie', MovieSchema);

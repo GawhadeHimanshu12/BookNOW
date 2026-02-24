@@ -1,3 +1,4 @@
+// client/src/components/admin/CityManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAllCitiesAdminApi, createCityAdminApi, updateCityAdminApi, deleteCityAdminApi } from '../../api/admin';
 import {
@@ -50,7 +51,7 @@ const CityManagement = () => {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setError(null); 
+        setError(null); // Clear modal error
     };
 
     const handleChange = (e) => {
@@ -61,7 +62,7 @@ const CityManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
-        const { _id, createdAt, __v, ...payload } = currentCity; 
+        const { _id, createdAt, __v, ...payload } = currentCity; // Exclude non-payload fields
 
         try {
             if (isEditing) {

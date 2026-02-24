@@ -1,3 +1,6 @@
+// server/models/Setting.js
+// Purpose: Defines the schema for storing global application settings.
+
 const mongoose = require('mongoose');
 
 const SettingSchema = new mongoose.Schema({
@@ -6,11 +9,11 @@ const SettingSchema = new mongoose.Schema({
         required: true,
         unique: true,
         trim: true,
-        uppercase: true, 
+        uppercase: true, // Store setting names in uppercase for consistency (e.g., 'GST_RATE')
         index: true
     },
     value: {
-        type: mongoose.Schema.Types.Mixed, 
+        type: mongoose.Schema.Types.Mixed, // Can store string, number, boolean, etc.
         required: true
     },
     description: {
@@ -27,7 +30,7 @@ const SettingSchema = new mongoose.Schema({
     }
 });
 
-
+// Middleware to update the 'updatedAt' field on save
 SettingSchema.pre('save', function(next) {
     this.updatedAt = Date.now();
     next();

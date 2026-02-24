@@ -1,4 +1,4 @@
-
+// client/src/pages/OrganizerDashboardPage.jsx
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Container from '@mui/material/Container';
@@ -8,21 +8,21 @@ import Paper from '@mui/material/Paper';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 
-
+// Import Icons
 import TheatersIcon from '@mui/icons-material/Theaters';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import SettingsIcon from '@mui/icons-material/Settings';
 
-
+// Import components for each tab
 import MyVenues from '../components/organizer/MyVenues';
 import OrganizerShowtimeManagement from '../components/organizer/OrganizerShowtimeManagement';
-import MyEventManagement from '../components/organizer/MyEventManagement'; 
+import MyEventManagement from '../components/organizer/MyEventManagement'; // The new component
 import MyVenueBookingsOrganizer from '../components/organizer/MyVenueBookingsOrganizer';
 import OrganizerProfileSettings from '../components/organizer/OrganizerProfileSettings';
 
-
+// TabPanel helper component
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
     return (
@@ -42,7 +42,7 @@ function TabPanel(props) {
     );
 }
 
-
+// Accessibility props helper
 function a11yProps(index) {
     return {
         id: `organizer-tab-${index}`,
@@ -53,7 +53,7 @@ function a11yProps(index) {
 const OrganizerDashboardPage = () => {
     const location = useLocation();
     
-    
+    // Logic to set the initial tab based on URL query param
     const getInitialTab = () => {
         const params = new URLSearchParams(location.search);
         const tabParam = params.get('tab');

@@ -1,4 +1,4 @@
-
+// client/src/pages/organizer/OrganizerEventFormPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createEventApi, getEventByIdApi, updateEventApi } from '../../api/events';

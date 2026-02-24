@@ -1,8 +1,9 @@
+// client/src/components/organizer/OrganizerShowtimeManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyShowtimesApi } from '../../api/organizer'; 
-import { getMyVenuesApi } from '../../api/organizer';    
-import { deleteShowtimeApi } from '../../api/showtimes'; 
+import { getMyShowtimesApi } from '../../api/organizer'; // Fetches showtimes for organizer's venues
+import { getMyVenuesApi } from '../../api/organizer';    // To select a venue for filtering/adding showtimes
+import { deleteShowtimeApi } from '../../api/showtimes'; // For deactivating/deleting
 import {
     Box, Button, Typography, Paper, List, ListItem, ListItemText, IconButton,
     CircularProgress, Alert, Chip, Tooltip, Divider, Grid, Select, MenuItem, FormControl, InputLabel
@@ -18,8 +19,8 @@ const OrganizerShowtimeManagement = () => {
     const [showtimes, setShowtimes] = useState([]);
     const [myVenues, setMyVenues] = useState([]);
     const [selectedVenueFilter, setSelectedVenueFilter] = useState('');
-    const [selectedDateFilter, setSelectedDateFilter] = useState(null); 
-    const [isLoading, setIsLoading] = useState(false); 
+    const [selectedDateFilter, setSelectedDateFilter] = useState(null); // dayjs object or null
+    const [isLoading, setIsLoading] = useState(false); // Combined loading state
     const [error, setError] = useState(null);
 
     const fetchInitialData = useCallback(async () => {
@@ -28,23 +29,23 @@ const OrganizerShowtimeManagement = () => {
         try {
             const venuesData = await getMyVenuesApi();
             setMyVenues(Array.isArray(venuesData) ? venuesData : []);
-            
-            await fetchShowtimes(null, null); 
+            // Fetch all showtimes initially or based on a default filter
+            await fetchShowtimes(null, null); // Fetch all initially
         } catch (err) {
             setError(err.message || "Failed to load initial data.");
         } finally {
             setIsLoading(false);
         }
-    }, []); 
+    }, []); // Removed fetchShowtimes from dep array, it's defined below
 
     const fetchShowtimes = useCallback(async (venueId, date) => {
-        setIsLoading(true); 
+        setIsLoading(true); // Show loading for showtime fetch specifically
         setError(null);
         try {
             const params = {};
             if (venueId) params.venueId = venueId;
             if (date) params.date = dayjs(date).format('YYYY-MM-DD');
-            
+            // Add other params like movieId if you add a movie filter
 
             const showtimesData = await getMyShowtimesApi(params);
             setShowtimes(Array.isArray(showtimesData) ? showtimesData : []);
@@ -68,12 +69,12 @@ const OrganizerShowtimeManagement = () => {
     const handleClearFilters = () => {
         setSelectedVenueFilter('');
         setSelectedDateFilter(null);
-        fetchShowtimes(null, null); 
+        fetchShowtimes(null, null); // Fetch all
     };
 
     const handleAddNewShowtime = () => {
-        
-        
+        // Navigate to a dedicated form page for creating showtimes.
+        // Might need to pass selectedVenueFilter if a venue is already chosen as context.
         navigate(`/organizer/showtimes/new${selectedVenueFilter ? `?venueId=${selectedVenueFilter}` : ''}`);
     };
 
@@ -85,7 +86,7 @@ const OrganizerShowtimeManagement = () => {
         if (window.confirm('Are you sure you want to delete/deactivate this showtime? This might affect existing bookings if not handled carefully.')) {
             try {
                 await deleteShowtimeApi(showtimeId);
-                
+                // Refresh current view
                 fetchShowtimes(selectedVenueFilter, selectedDateFilter);
             } catch (err) {
                 alert(`Failed to delete showtime: ${err.message || 'Server error'}`);

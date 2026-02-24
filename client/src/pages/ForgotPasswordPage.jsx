@@ -1,7 +1,7 @@
-
+// client/src/pages/ForgotPasswordPage.jsx
 import React, { useState } from 'react';
 import { forgotPasswordApi } from '../api/auth';
-
+// MUI Components
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -15,13 +15,13 @@ import { Link as RouterLink } from 'react-router-dom';
 
 const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
-    const [message, setMessage] = useState(''); 
-    const [error, setError] = useState(''); 
+    const [message, setMessage] = useState(''); // For success/info messages
+    const [error, setError] = useState(''); // For error messages
     const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
-        setError(''); 
-        setMessage(''); 
+        setError(''); // Clear error on change
+        setMessage(''); // Clear message on change
         setEmail(e.target.value);
     };
 
@@ -36,11 +36,11 @@ const ForgotPasswordPage = () => {
         setIsLoading(true);
         try {
             const response = await forgotPasswordApi(email);
-            
+            // Backend always returns success for security, show the message it sends
             setMessage(response.data || 'Password reset instructions have been sent if the email is registered.');
-            setEmail(''); 
+            setEmail(''); // Clear input field on success
         } catch (err) {
-            
+            // Show specific error from API if available, otherwise generic
             setError(err?.response?.data?.msg || err.message || 'Failed to send reset request.');
         } finally {
             setIsLoading(false);
@@ -54,7 +54,7 @@ const ForgotPasswordPage = () => {
                     Forgot Password
                 </Typography>
                 <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
-                    Enter your email address and we'll send you a link to reset your password (check server console/Mailtrap for the link during testing).
+                    Enter your email address and we'll send you a link to reset your password.
                 </Typography>
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: '100%' }}>
                     {error && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{error}</Alert>}

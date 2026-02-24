@@ -1,3 +1,6 @@
+// server/controllers/bookingController.js
+// Purpose: Contains logic for handling booking-related API requests.
+
 const Booking = require('../models/Booking');
 const Showtime = require('../models/Showtime');
 const User = require('../models/User');
@@ -9,11 +12,11 @@ const sendEmail = require('../utils/sendEmail');
 const dayjs = require('dayjs');
 const { customAlphabet } = require('nanoid');
 
-
+// Using a more standard alphabet without easily confused characters (e.g., I, O, 0, 1)
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const generateBookingRefId = customAlphabet(ALPHABET, 6);
 
-
+// Helper to generate unique ID
 async function generateUniqueBookingRefId(session) {
     let bookingRefIdGenerated;
     let attempts = 0;
@@ -32,6 +35,12 @@ async function generateUniqueBookingRefId(session) {
     return bookingRefIdGenerated;
 }
 
+/**
+ * Creates a new booking with a 'PaymentPending' status.
+ * This is the first step in the booking process before payment.
+ * @route POST /api/bookings
+ * @access Private (Authenticated Users)
+ */
 exports.createBooking = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -49,10 +58,16 @@ exports.createBooking = async (req, res) => {
     try {
         session.startTransaction();
 
-        const showtime = await Showtime.findById(showtimeId).populate('venue').session(session);
+        const showtime = await Showtime.findById(showtimeId).populate('venue').populate('movie').populate('event').session(session);
         if (!showtime || !showtime.isActive || !showtime.priceTiers || showtime.priceTiers.length === 0) {
             await session.abortTransaction();
             return res.status(404).json({ msg: 'Showtime not found or is invalid.' });
+        }
+        
+        const user = await User.findById(userId).session(session);
+        if(!user) {
+            await session.abortTransaction();
+            return res.status(404).json({ msg: 'User not found.' });
         }
 
         const updatedShowtime = await Showtime.findOneAndUpdate(
@@ -91,6 +106,18 @@ exports.createBooking = async (req, res) => {
         }
 
         const bookingRefId = await generateUniqueBookingRefId(session);
+        
+        const qrCodeDetails = {
+            bookingRefId: bookingRefId,
+            userName: user.name,
+            userEmail: user.email,
+            itemTitle: showtime.movie?.title || showtime.event?.title,
+            venueName: showtime.venue.name,
+            screenName: showtime.screenName,
+            showtime: showtime.startTime,
+            seats: seats,
+            totalAmount: Math.max(finalAmount, 0)
+        };
 
         const newBooking = new Booking({
             bookingRefId,
@@ -101,7 +128,8 @@ exports.createBooking = async (req, res) => {
             totalAmount: Math.max(finalAmount, 0),
             discountAmount,
             promoCodeApplied: appliedPromoCodeDoc ? appliedPromoCodeDoc._id : null,
-            status: 'PaymentPending'
+            status: 'PaymentPending',
+            qrCodeData: JSON.stringify(qrCodeDetails)
         });
 
         const booking = await newBooking.save({ session: session });
@@ -113,6 +141,14 @@ exports.createBooking = async (req, res) => {
         if (session.inTransaction()) {
             await session.abortTransaction();
         }
+        // *** THIS IS THE FIX ***
+        // Check for MongoDB's write conflict error code (112)
+        if (err.code === 112) {
+            console.error('[createBooking] Write Conflict Error:', err);
+            return res.status(409).json({ msg: 'These seats were just booked by another user. Please select different seats and try again.' });
+        }
+        // *** END OF FIX ***
+
         console.error('[createBooking] Error:', err);
         res.status(err.status || 500).json({ msg: err.message || 'Server error during booking.', errors: err.errors });
     } finally {
@@ -120,7 +156,11 @@ exports.createBooking = async (req, res) => {
     }
 };
 
-
+/**
+ * Get bookings for the logged-in user
+ * @route GET /api/bookings/me
+ * @access Private
+ */
 exports.getMyBookings = async (req, res) => {
     const userId = req.user.id;
     try {
@@ -141,6 +181,11 @@ exports.getMyBookings = async (req, res) => {
     }
 };
 
+/**
+ * Get a specific booking by ID for the logged-in user or admin
+ * @route GET /api/bookings/:id
+ * @access Private
+ */
 exports.getBookingById = async (req, res) => {
     const bookingIdentifier = req.params.id;
     const userId = req.user.id;
@@ -150,6 +195,7 @@ exports.getBookingById = async (req, res) => {
             : { bookingRefId: bookingIdentifier.toUpperCase() };
         
         const booking = await Booking.findOne(query)
+             .select('+qrCodeData') // Explicitly select the qrCodeData field
              .populate({
                 path: 'showtime',
                 populate: [
@@ -172,6 +218,11 @@ exports.getBookingById = async (req, res) => {
     }
 };
 
+/**
+ * Cancel a booking (by user)
+ * @route PUT /api/bookings/:id/cancel
+ * @access Private
+ */
 exports.cancelBooking = async (req, res) => {
     const bookingId = req.params.id;
     const userId = req.user.id;
@@ -220,7 +271,7 @@ exports.cancelBooking = async (req, res) => {
             { new: true, session: session }
         );
 
-        
+        // TODO: Handle promo code use count reversal if applicable
         await session.commitTransaction();
         res.status(200).json({ success: true, msg: 'Booking cancelled successfully', booking });
     } catch (err) {
@@ -232,6 +283,11 @@ exports.cancelBooking = async (req, res) => {
     }
 };
 
+/**
+ * Cancels a 'PaymentPending' booking. Called when user closes payment modal.
+ * @route PUT /api/bookings/:id/cancel-pending
+ * @access Private (Owner of booking)
+ */
 exports.cancelPendingBooking = async (req, res) => {
     const bookingId = req.params.id;
     const userId = req.user.id;
@@ -248,14 +304,14 @@ exports.cancelPendingBooking = async (req, res) => {
             return res.status(400).json({ msg: `Booking status is '${booking.status}', not 'PaymentPending'.` });
         }
 
-        
+        // Release seats
         await Showtime.updateOne(
             { _id: booking.showtime },
             { $pullAll: { bookedSeats: booking.seats } },
             { session }
         );
 
-        
+        // Update booking status to 'Cancelled' or 'PaymentFailed'
         booking.status = 'PaymentFailed';
         await booking.save({ session });
         
@@ -270,23 +326,35 @@ exports.cancelPendingBooking = async (req, res) => {
     }
 };
 
-exports.validateBookingQR = async (req, res) => {
-    const { bookingRefId } = req.body;
-    const staffUserId = req.user.id;
 
-    if (!bookingRefId || typeof bookingRefId !== 'string') {
-        return res.status(400).json({ msg: 'Invalid Booking Reference ID format' });
-    }
+/**
+ * Validate a booking via QR code scan data
+ * @route POST /api/scan/validate
+ * @access Private (Admin or Organizer)
+ */
+exports.validateBookingQR = async (req, res) => {
+    const { qrCodeData } = req.body; // Expect the full QR data string
+    const staffUserId = req.user.id;
     
+    let bookingDetails;
     try {
-        const booking = await Booking.findOne({ bookingRefId: bookingRefId.toUpperCase() })
-            .populate({ path: 'showtime', populate: [{ path: 'movie', select: 'title' }, { path: 'venue', select: 'organizer'}] })
-            .populate('user', 'name email');
+        bookingDetails = JSON.parse(qrCodeData);
+    } catch (e) {
+        return res.status(400).json({ msg: 'Invalid QR Code format.' });
+    }
+
+    if (!bookingDetails.bookingRefId) {
+        return res.status(400).json({ msg: 'QR Code is missing a booking reference ID.' });
+    }
+
+    try {
+        const booking = await Booking.findOne({ bookingRefId: bookingDetails.bookingRefId.toUpperCase() })
+            .populate({ path: 'showtime', populate: { path: 'venue', select: 'organizer' } });
 
         if (!booking) {
             return res.status(404).json({ msg: 'Booking reference not found' });
         }
-
+        
         let isAuthorized = false;
         if (req.user.role === 'admin') {
             isAuthorized = true;
@@ -312,16 +380,12 @@ exports.validateBookingQR = async (req, res) => {
         booking.status = 'CheckedIn';
         await booking.save();
 
+        // Respond with the details from the QR code for confirmation on the scanner's screen
         res.status(200).json({
             success: true,
             message: 'Check-in Successful!',
             bookingDetails: {
-                bookingRefId: booking.bookingRefId,
-                userName: booking.user.name,
-                movieTitle: booking.showtime?.movie?.title || booking.showtime?.event?.title || 'N/A',
-                showtime: dayjs(booking.showtime.startTime).format('DD MMM, h:mm A'),
-                screenName: booking.showtime.screenName,
-                seats: booking.seats,
+                ...bookingDetails,
                 checkInTime: booking.checkInTime.toLocaleString('en-IN')
             }
         });

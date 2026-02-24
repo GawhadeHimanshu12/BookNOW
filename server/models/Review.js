@@ -1,8 +1,11 @@
+// File: /server/models/Review.js
+// Purpose: Defines the schema for the Review collection.
+
 const mongoose = require('mongoose');
 
 const ReportSchema = new mongoose.Schema({
-    _id: false, 
-    user: { 
+    _id: false, // No need for a separate ID for this sub-document
+    user: { // User who reported the review
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
@@ -28,20 +31,20 @@ const ReviewSchema = new mongoose.Schema({
     rating: {
         type: Number,
         min: 1,
-        max: 5, 
+        max: 5, // Or 10, define your scale
         required: [true, 'Please provide a rating between 1 and 5']
     },
     comment: {
         type: String,
         trim: true,
-        maxlength: [500, 'Comment cannot be more than 500 characters'] 
+        maxlength: [500, 'Comment cannot be more than 500 characters'] // Optional length limit
     },
-    user: { 
+    user: { // User who wrote the review
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    movie: { 
+    movie: { // Movie being reviewed
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Movie',
         required: true
@@ -61,11 +64,11 @@ const ReviewSchema = new mongoose.Schema({
     }
 });
 
-
-
+// --- Indexes ---
+// Prevent user from submitting more than one review per movie
 ReviewSchema.index({ movie: 1, user: 1 }, { unique: true });
 
-
+// --- Static Method to Calculate Average Rating ---
 ReviewSchema.statics.calculateAverageRating = async function(movieId) {
     const Movie = mongoose.model('Movie');
     const stats = await this.aggregate([
@@ -94,7 +97,7 @@ ReviewSchema.statics.calculateAverageRating = async function(movieId) {
     }
 };
 
-
+// --- Middleware Hooks ---
 ReviewSchema.post('save', function() {
     this.constructor.calculateAverageRating(this.movie);
 });

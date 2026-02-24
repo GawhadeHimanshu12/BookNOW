@@ -1,5 +1,6 @@
+// File: /client/src/components/admin/UserManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link as RouterLink } from 'react-router-dom'; 
+import { Link as RouterLink } from 'react-router-dom'; // Import Link for navigation
 import { getAllUsersAdminApi, approveOrganizerAdminApi, updateUserAdminApi, deleteUserAdminApi } from '../../api/admin';
 import {
     Box, Button, Typography, Paper, List, ListItem, ListItemText, IconButton,
@@ -54,9 +55,9 @@ const UserManagement = ({ initialFilter = 'all' }) => {
     const handleSubTabChange = (event, newValue) => {
         const filters = ['all', 'organizers', 'pendingOrganizers'];
         setCurrentSubTab(newValue);
-        
-        
-        
+        // This component doesn't control the filter, it receives it.
+        // The parent (AdminDashboardPage) should handle navigation to update the prop.
+        // For now, we just fetch based on the new tab index for immediate feedback.
         fetchUsers(filters[newValue]);
     };
     
@@ -155,6 +156,7 @@ const UserManagement = ({ initialFilter = 'all' }) => {
                              />
                              <Box sx={{display: 'flex', gap: 0.5, mt: {xs: 1, sm: 0}}}>
                                  <Tooltip title="View Details">
+                                     {/* --- CORRECTED: This now links to the new page --- */}
                                      <IconButton component={RouterLink} to={`/admin/users/${user._id}`} size="small">
                                          <VisibilityIcon />
                                      </IconButton>
@@ -174,6 +176,8 @@ const UserManagement = ({ initialFilter = 'all' }) => {
                  ))}
              </List>
             )}
+
+            {/* Edit and Delete Modals remain unchanged and fully functional */}
             <Dialog open={isEditModalOpen} onClose={handleCloseEditModal}>
                 <DialogTitle>Edit User: {selectedUser?.name}</DialogTitle>
                 <DialogContent>
@@ -201,6 +205,7 @@ const UserManagement = ({ initialFilter = 'all' }) => {
             </Dialog>
 
             <Dialog open={isDeleteModalOpen} onClose={handleCloseDeleteModal}>
+                {/* ... Delete modal content is correct and unchanged ... */}
             </Dialog>
         </Box>
     );

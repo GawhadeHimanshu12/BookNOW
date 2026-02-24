@@ -1,9 +1,10 @@
+// client/src/components/admin/PlatformStats.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { getPlatformStatsAdminApi } from '../../api/admin';
 import {
     Box, Typography, Paper, Grid, CircularProgress, Alert, Card, CardContent, Divider, Link as MuiLink,
-    ListItemIcon 
+    ListItemIcon // Added Link from MUI for consistent styling if needed
 } from '@mui/material';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import MovieFilterIcon from '@mui/icons-material/MovieFilter';
@@ -12,11 +13,11 @@ import TheatersIcon from '@mui/icons-material/Theaters';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-
+// import LocationCityIcon from '@mui/icons-material/LocationCity';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 
-
+// Updated StatCard to be clickable
 const StatCard = ({ title, value, icon, color = "primary.main", linkTo, queryParams }) => {
     const navigate = useNavigate();
 
@@ -53,7 +54,7 @@ const StatCard = ({ title, value, icon, color = "primary.main", linkTo, queryPar
                 transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out'
             }}
             onClick={linkTo ? handleClick : undefined}
-            component={linkTo ? 'div' : Paper} 
+            component={linkTo ? 'div' : Paper} // Make it a div if clickable for semantics
         >
             {cardContent}
         </Card>
@@ -61,7 +62,7 @@ const StatCard = ({ title, value, icon, color = "primary.main", linkTo, queryPar
 };
 
 
-const PlatformStats = () => { 
+const PlatformStats = () => { // Removed navigateToTab prop, will use useNavigate directly
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -96,7 +97,8 @@ const PlatformStats = () => {
         <Box sx={{p:1}}>
             <Typography variant="h6" gutterBottom sx={{mb: 3}}>Platform Overview</Typography>
             <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={4} lg={3}> 
+                {/* Users Section */}
+                <Grid item xs={12} sm={6} md={4} lg={3}> {/* Adjusted grid for more cards */}
                     <Paper elevation={2} sx={{p:2, height: '100%'}}>
                         <Typography variant="h6" gutterBottom component="div" sx={{display: 'flex', alignItems: 'center'}}>
                             <PeopleAltIcon sx={{mr:1, color: 'primary.main'}}/> User Statistics
@@ -122,6 +124,7 @@ const PlatformStats = () => {
                     </Paper>
                 </Grid>
 
+                {/* Content Section */}
                  <Grid item xs={12} sm={6} md={4} lg={3}>
                     <Paper elevation={2} sx={{p:2, height: '100%'}}>
                         <Typography variant="h6" gutterBottom component="div" sx={{display: 'flex', alignItems: 'center'}}>
@@ -130,13 +133,14 @@ const PlatformStats = () => {
                         <Divider sx={{mb:2}} />
                         <Grid container spacing={2}>
                             <Grid item xs={12}><StatCard title="Total Movies" value={stats.content?.movies || 0} icon={<MovieFilterIcon />} linkTo="/admin" queryParams={{ tab: 'movies' }} /></Grid>
-                            <Grid item xs={12}><StatCard title="Active Venues" value={stats.content?.activeVenues || 0} icon={<TheatersIcon />} color="info.main" linkTo="/admin" queryParams={{ tab: 'venues' }} /></Grid> {/* Venue filter to be added later */}
-                            <Grid item xs={12}><StatCard title="Upcoming Events" value={stats.content?.upcomingEvents || 0} icon={<EventIcon />} color="warning.main" /></Grid>
-                            <Grid item xs={12}><StatCard title="Upcoming Showtimes" value={stats.content?.upcomingShowtimes || 0} icon={<TheatersIcon />} color="secondary.light" /></Grid>
+                            <Grid item xs={12}><StatCard title="Active Venues" value={stats.content?.activeVenues || 0} icon={<TheatersIcon />} color="info.main" linkTo="/admin" queryParams={{ tab: 'venues' /*, venueFilter: 'active' */ }} /></Grid> {/* Venue filter to be added later */}
+                            <Grid item xs={12}><StatCard title="Upcoming Events" value={stats.content?.upcomingEvents || 0} icon={<EventIcon />} color="warning.main" /* linkTo="/admin" queryParams={{ tab: 'events' }} */ /></Grid>
+                            <Grid item xs={12}><StatCard title="Upcoming Showtimes" value={stats.content?.upcomingShowtimes || 0} icon={<TheatersIcon />} color="secondary.light" /* linkTo="/admin" queryParams={{ tab: 'showtimes' }} */ /></Grid>
                         </Grid>
                     </Paper>
                 </Grid>
                 
+                {/* Bookings & Financials Section */}
                 <Grid item xs={12} sm={6} md={4} lg={3}>
                      <Paper elevation={2} sx={{p:2, height: '100%'}}>
                         <Typography variant="h6" gutterBottom component="div" sx={{display: 'flex', alignItems: 'center'}}>
@@ -161,7 +165,7 @@ const PlatformStats = () => {
                         <Divider sx={{mb:2}} />
                         <Grid container spacing={2}>
                             <Grid item xs={12}><StatCard title="Total Promo Codes" value={stats.promoCodes?.total || 0} icon={<ConfirmationNumberIcon />} linkTo="/admin" queryParams={{ tab: 'promocodes' }} /></Grid>
-                            <Grid item xs={12}><StatCard title="Active Promo Codes" value={stats.promoCodes?.active || 0} icon={<ConfirmationNumberIcon />} color="info.dark" linkTo="/admin" queryParams={{ tab: 'promocodes' }} /></Grid>
+                            <Grid item xs={12}><StatCard title="Active Promo Codes" value={stats.promoCodes?.active || 0} icon={<ConfirmationNumberIcon />} color="info.dark" linkTo="/admin" queryParams={{ tab: 'promocodes' /*, promoFilter: 'active' */ }} /></Grid>
                         </Grid>
                     </Paper>
                 </Grid>

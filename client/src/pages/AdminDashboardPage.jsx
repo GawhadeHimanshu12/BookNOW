@@ -1,4 +1,4 @@
-
+// File: /client/src/pages/AdminDashboardPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Container from '@mui/material/Container';
@@ -15,9 +15,9 @@ import TheatersIcon from '@mui/icons-material/Theaters';
 import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import ReportProblemIcon from '@mui/icons-material/ReportProblem'; 
+import ReportProblemIcon from '@mui/icons-material/ReportProblem'; // New Icon
 
-
+// Import the management components
 import UserManagement from '../components/admin/UserManagement';
 import PromoCodeManagement from '../components/admin/PromoCodeManagement';
 import CityManagement from '../components/admin/CityManagement';
@@ -26,7 +26,7 @@ import VenueManagement from '../components/admin/VenueManagement';
 import EventManagement from '../components/admin/EventManagement'; 
 import BookingManagement from '../components/admin/BookingManagement';
 import PlatformStats from '../components/admin/PlatformStats';
-import ReportedReviewsManagement from '../components/admin/ReportedReviewsManagement'; 
+import ReportedReviewsManagement from '../components/admin/ReportedReviewsManagement'; // New Component
 
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -62,8 +62,8 @@ const tabNameToIndex = {
     venues: 4,
     events: 5,
     bookings: 6,
-    reports: 7, 
-    statistics: 8, 
+    reports: 7, // New Tab
+    statistics: 8, // Index shifted
 };
 
 const AdminDashboardPage = () => {

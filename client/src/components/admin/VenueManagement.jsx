@@ -1,11 +1,12 @@
+// client/src/components/admin/VenueManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAllVenuesAdminApi, updateVenueAdminApi } from '../../api/admin'; 
+import { getAllVenuesAdminApi, updateVenueAdminApi } from '../../api/admin'; // Using admin-specific API for clarity
 import {
     Box, Button, Typography, Paper, List, ListItem, ListItemText, IconButton,
     CircularProgress, Alert, Grid, Tooltip, Divider, Chip, Switch, FormControlLabel,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit'; 
+import EditIcon from '@mui/icons-material/Edit'; // Placeholder for future edit functionality
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
@@ -21,11 +22,11 @@ const VenueManagement = () => {
         setIsLoading(true);
         setError(null);
         try {
-            
+            // Params for pagination for the admin API call
             const params = { 
                 limit: currentRowsPerPage, 
                 page: currentPage + 1, 
-                status: 'all' 
+                status: 'all' // Fetch all statuses for admin
             };
             const response = await getAllVenuesAdminApi(params);
             setVenues(response.data || []);
@@ -55,7 +56,7 @@ const VenueManagement = () => {
     const handleToggleActiveStatus = async (venueId, currentStatus) => {
         try {
             await updateVenueAdminApi(venueId, { isActive: !currentStatus });
-            
+            // Refresh data for the current page
             fetchVenues(page, rowsPerPage);
         } catch (err) {
             alert(`Failed to update venue status: ${err.message || 'Server error'}`);
@@ -69,6 +70,8 @@ const VenueManagement = () => {
         <Box sx={{p:1}}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">Venue Management</Typography>
+                {/* Add Venue button can be added later if admins can create venues directly */}
+                {/* <Button variant="contained" color="primary">Add Venue</Button> */}
             </Box>
 
             {venues.length === 0 && !isLoading && <Typography sx={{p:2, textAlign: 'center'}}>No venues found.</Typography>}
@@ -114,6 +117,12 @@ const VenueManagement = () => {
                                                     {venue.isActive ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                                 </IconButton>
                                             </Tooltip>
+                                            {/* Placeholder for future edit button */}
+                                            {/* <Tooltip title="Edit Venue">
+                                                <IconButton size="small" sx={{ml:1}}>
+                                                    <EditIcon />
+                                                </IconButton>
+                                            </Tooltip> */}
                                         </TableCell>
                                     </TableRow>
                                 ))}

@@ -1,26 +1,34 @@
+// client/src/components/SeatMap.jsx (Accept seatLayoutRows Prop)
 import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Seat from './Seat';
 import Divider from '@mui/material/Divider';
+// Import icons used in Legend
 import ChairOutlinedIcon from '@mui/icons-material/ChairOutlined';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
 import BlockIcon from '@mui/icons-material/Block';
 import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal';
 
-
+// Expect 'seatLayoutRows' prop which should be the array of rows
 const SeatMap = ({ seatLayoutRows, selectedSeats, onSeatSelect }) => {
     console.log('[SeatMap Component] Received props:', { seatLayoutRows, selectedSeats });
+
+    // Check if seatLayoutRows is a valid array
     const isValidLayout = Array.isArray(seatLayoutRows) && seatLayoutRows.length > 0;
     console.log('[SeatMap Component] Is layout valid?', isValidLayout);
 
     if (!isValidLayout) {
         return <Typography color="text.secondary" align="center" sx={{p: 3}}>Seat layout data is missing or invalid.</Typography>;
     }
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, overflowX: 'auto', bgcolor: 'grey.100' }}>
+             {/* Screen Indicator */}
              <Box sx={{ width: '80%', maxWidth: '400px', height: '6px', bgcolor: 'grey.700', mb: 3, borderRadius: '3px' }} />
              <Typography variant="caption" sx={{ mb: 1, color: 'text.secondary' }}>SCREEN THIS WAY</Typography>
+
+            {/* Rows - Map over seatLayoutRows directly */}
             {seatLayoutRows.map((row) => (
                 (row && row.rowId && Array.isArray(row.seats)) ? (
                     <Box key={row.rowId} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
