@@ -1,8 +1,7 @@
-// client/src/pages/RegisterPage.jsx (Corrected Submit Logic)
+// client/src/pages/RegisterPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-// MUI Components
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -19,25 +18,25 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Radio from '@mui/material/Radio';
 
 const RegisterPage = () => {
+    const [step, setStep] = useState(1); // 1: Details, 2: OTP
     const [formData, setFormData] = useState({
         name: '', email: '', password: '', confirmPassword: '',
         role: 'user', organizationName: ''
     });
+    const [otp, setOtp] = useState('');
     const [pageError, setPageError] = useState('');
-    // Get auth context functions and state
-    const { register, googleLogin, isLoading, authError, setAuthError } = useAuth();
+    
+    const { register, verifyOtp, googleLogin, isLoading, authError, setAuthError } = useAuth();
     const navigate = useNavigate();
     const isOrganizer = formData.role === 'organizer';
 
-    // Clear errors when component mounts or unmounts
     useEffect(() => {
         setAuthError(null);
         return () => { setAuthError(null); };
     }, [setAuthError]);
 
     const handleChange = (e) => {
-        setAuthError(null); // Clear API error on change
-        setPageError('');   // Clear page error on change
+        setAuthError(null); setPageError('');
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
@@ -46,11 +45,11 @@ const RegisterPage = () => {
         setFormData({ ...formData, role: e.target.value });
     };
 
+    // Step 1: Submit Form & Send OTP
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setPageError(''); setAuthError(null); // Clear errors before submit
+        setPageError(''); setAuthError(null);
 
-        // Frontend Validations
         if (formData.password !== formData.confirmPassword) {
             setPageError("Passwords do not match."); return;
         }
@@ -60,15 +59,10 @@ const RegisterPage = () => {
         if (isOrganizer && !formData.organizationName.trim()) {
             setPageError("Organization name is required for organizers."); return;
         }
-        if (!formData.name.trim()) {
-            setPageError("Full Name is required."); return;
+        if (!formData.name.trim() || !formData.email.trim()) { 
+            setPageError("Name and Email are required."); return;
         }
-         if (!formData.email.trim()) { // Basic email presence check
-            setPageError("Email is required."); return;
-        }
-        // More robust email validation could be added here if desired
 
-        // Prepare data for API call
         const apiData = {
             name: formData.name.trim(),
             email: formData.email.trim(),
@@ -77,77 +71,94 @@ const RegisterPage = () => {
             ...(isOrganizer && { organizationName: formData.organizationName.trim() })
         };
 
-        try {
-            // Call the register function from context, which returns { success: boolean, ... }
-            const result = await register(apiData);
+        const result = await register(apiData);
+        if (result && result.success) {
+            setStep(2); // Registration recorded, waiting for OTP validation
+        }
+    };
 
-            // --- CORRECTED CHECK ---
-            // Explicitly check the 'success' property of the result object
-            if (result.success) {
-                console.log("Registration successful, navigating...");
-                // Optional: Show message if organizer needs approval
-                if (formData.role === 'organizer' && !result.isApproved) {
-                    alert("Registration successful! Your organizer account requires admin approval before you can manage venues/showtimes or log in fully as an organizer.");
-                    // Redirect to login or homepage after showing message?
-                    navigate('/login');
-                } else {
-                    // Redirect user or approved organizer to home
-                    navigate('/');
-                }
+    // Step 2: Verify OTP
+    const handleOtpSubmit = async () => {
+        setPageError('');
+        if (!otp) return setPageError("Please enter the OTP sent to your email.");
+        
+        const result = await verifyOtp(formData.email, otp);
+        if (result.success) {
+            if (formData.role === 'organizer' && !result.isApproved) {
+                alert("Account verified successfully! Your organizer account requires admin approval before you can fully log in.");
+                navigate('/login');
             } else {
-                // Registration failed, error message should be set in authError by the context
-                console.log("Registration failed, error should be displayed from context.");
-                // No navigation needed here, error Alert will show
+                navigate('/');
             }
-            // --- END CORRECTION ---
-
-        } catch (error) {
-            // Catch unexpected errors not handled by context's try/catch
-             console.error("Unexpected error during registration submit:", error);
-             setPageError("An unexpected registration error occurred. Please try again.");
         }
     };
 
     return (
         <Container component="main" maxWidth="xs" sx={{ mt: 8, mb: 4 }}>
             <Paper elevation={3} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Typography component="h1" variant="h5" gutterBottom> Register </Typography>
-                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: '100%' }}>
-                    {/* Display errors */}
+                <Typography component="h1" variant="h5" gutterBottom> 
+                    {step === 1 ? 'Register' : 'Verify Email'} 
+                </Typography>
+
+                <Alert severity="warning" sx={{ mb: 2, fontSize: '0.75rem', py: 0, width: '100%' }}>
+                    <strong>Note:</strong> AWS SES is in Sandbox mode. Email Verification will only work for verified Sandbox emails.
+                </Alert>
+
+                <Box component="form" onSubmit={step === 1 ? handleSubmit : (e) => e.preventDefault()} noValidate sx={{ mt: 1, width: '100%' }}>
+                    
                     {authError && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{authError}</Alert>}
                     {pageError && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{pageError}</Alert>}
 
-                    {/* Form Fields */}
-                    <TextField margin="normal" required fullWidth id="name" label="Full Name" name="name" value={formData.name} onChange={handleChange} disabled={isLoading} />
-                    <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} disabled={isLoading} />
-                    <TextField margin="normal" required fullWidth name="password" label="Password (min 6 chars)" type="password" id="password" inputProps={{ minLength: 6 }} value={formData.password} onChange={handleChange} disabled={isLoading} />
-                    <TextField margin="normal" required fullWidth name="confirmPassword" label="Confirm Password" type="password" id="confirmPassword" inputProps={{ minLength: 6 }} value={formData.confirmPassword} onChange={handleChange} disabled={isLoading} />
+                    {step === 1 ? (
+                        <>
+                            <TextField margin="normal" required fullWidth id="name" label="Full Name" name="name" value={formData.name} onChange={handleChange} disabled={isLoading} />
+                            <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} disabled={isLoading} />
+                            <TextField margin="normal" required fullWidth name="password" label="Password (min 6 chars)" type="password" id="password" inputProps={{ minLength: 6 }} value={formData.password} onChange={handleChange} disabled={isLoading} />
+                            <TextField margin="normal" required fullWidth name="confirmPassword" label="Confirm Password" type="password" id="confirmPassword" inputProps={{ minLength: 6 }} value={formData.confirmPassword} onChange={handleChange} disabled={isLoading} />
 
-                    <FormControl component="fieldset" sx={{ mt: 2, mb: 1 }}>
-                        <FormLabel component="legend">Register As</FormLabel>
-                        <RadioGroup row name="role" value={formData.role} onChange={handleRoleChange}>
-                            <FormControlLabel value="user" control={<Radio size="small"/>} label="User" disabled={isLoading}/>
-                            <FormControlLabel value="organizer" control={<Radio size="small"/>} label="Organizer" disabled={isLoading}/>
-                        </RadioGroup>
-                    </FormControl>
+                            <FormControl component="fieldset" sx={{ mt: 2, mb: 1 }}>
+                                <FormLabel component="legend">Register As</FormLabel>
+                                <RadioGroup row name="role" value={formData.role} onChange={handleRoleChange}>
+                                    <FormControlLabel value="user" control={<Radio size="small"/>} label="User" disabled={isLoading}/>
+                                    <FormControlLabel value="organizer" control={<Radio size="small"/>} label="Organizer" disabled={isLoading}/>
+                                </RadioGroup>
+                            </FormControl>
 
-                    {isOrganizer && ( <TextField margin="normal" required={isOrganizer} fullWidth name="organizationName" label="Organization Name" id="organizationName" value={formData.organizationName} onChange={handleChange} disabled={isLoading} sx={{ mb: 2 }}/> )}
+                            {isOrganizer && ( <TextField margin="normal" required={isOrganizer} fullWidth name="organizationName" label="Organization Name" id="organizationName" value={formData.organizationName} onChange={handleChange} disabled={isLoading} sx={{ mb: 2 }}/> )}
 
-                    <Button type="submit" fullWidth variant="contained" color="error" sx={{ mt: 2, mb: 2 }} disabled={isLoading}>
-                       {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Register'}
-                    </Button>
-                    <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={googleLogin}
-                        sx={{ mb: 2 }}
-                    >
-                        Sign Up with Google
-                    </Button>
-                     <Box sx={{ textAlign: 'center' }}> <Link component={RouterLink} to="/login" variant="body2" color="error"> {"Already have an account? Sign In"} </Link> </Box>
+                            <Button type="submit" fullWidth variant="contained" color="error" sx={{ mt: 2, mb: 2 }} disabled={isLoading}>
+                               {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Register & Send OTP'}
+                            </Button>
+                            
+                            <Button fullWidth variant="outlined" onClick={googleLogin} sx={{ mb: 2 }}>
+                                Sign Up with Google
+                            </Button>
+                            
+                            <Box sx={{ textAlign: 'center' }}> 
+                                <Link component={RouterLink} to="/login" variant="body2" color="error"> {"Already have an account? Sign In"} </Link> 
+                            </Box>
+                        </>
+                    ) : (
+                        <>
+                            <Alert severity="info" sx={{ mb: 2 }}>
+                                An OTP has been sent to <strong>{formData.email}</strong>.
+                            </Alert>
+                            <TextField
+                                margin="normal" required fullWidth label="Enter 6-digit OTP"
+                                value={otp} onChange={(e) => setOtp(e.target.value)} disabled={isLoading} autoFocus
+                            />
+                            <Button fullWidth variant="contained" color="success" sx={{ mt: 2 }} onClick={handleOtpSubmit} disabled={isLoading}>
+                                {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Verify & Continue'}
+                            </Button>
+                            <Button fullWidth size="small" sx={{ mt: 1 }} onClick={() => setStep(1)} disabled={isLoading}>
+                                Back to Details
+                            </Button>
+                        </>
+                    )}
                 </Box>
             </Paper>
         </Container>
     );
 };
+
 export default RegisterPage;

@@ -1,48 +1,41 @@
 // server/utils/sendEmail.js
-// Purpose: Reusable function to send emails using Nodemailer.
+// Purpose: Reusable function to send emails using Nodemailer with AWS SES.
 
 const nodemailer = require('nodemailer');
+const { SESClient, SendRawEmailCommand } = require('@aws-sdk/client-ses');
+
+// Initialize SES Client using your environment variables
+const ses = new SESClient({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+});
 
 const sendEmail = async (options) => {
-    // 1. Create a transporter object using SMTP transport
-    //    Get credentials from environment variables
+    // Create a transporter using the SES client directly
     const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        // port: process.env.EMAIL_PORT,
-        port: parseInt(process.env.EMAIL_PORT),
-        secure: false,
-        // secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASSWORD,
-        },
-        // Optional: Add TLS options if needed, e.g., for self-signed certs in dev
-        // tls: {
-        //     rejectUnauthorized: false // Use only for local testing if needed
-        // }
+        SES: { ses, aws: { SendRawEmailCommand } },
     });
 
-    // 2. Define email options
+    // Define email options
     const message = {
-        from: process.env.EMAIL_FROM_ADDRESS, // Sender address
-        to: options.to,                     // List of receivers (string or array)
+        from: process.env.EMAIL_FROM_ADDRESS, // Sender address (Must be verified in SES Sandbox)
+        to: options.to,                       // List of receivers
         subject: options.subject,             // Subject line
-        text: options.text,                 // Plain text body (optional)
-        html: options.html                  // HTML body (optional, often preferred)
+        text: options.text,                   // Plain text body
+        html: options.html                    // HTML body
     };
 
-    // 3. Send the email
+    // Send the email
     try {
         const info = await transporter.sendMail(message);
-        console.log('Email sent successfully. Message ID:', info.messageId);
-        // For Mailtrap, you can often get a preview URL:
-        // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+        console.log('AWS SES Email sent successfully. Message ID:', info.messageId);
         return { success: true, info };
     } catch (error) {
-        console.error('Error sending email:', error);
-        // Rethrow or handle error as needed
+        console.error('Error sending email via AWS SES:', error);
         throw new Error(`Email could not be sent: ${error.message}`);
-        // return { success: false, error };
     }
 };
 
