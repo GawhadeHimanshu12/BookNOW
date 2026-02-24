@@ -4,8 +4,8 @@
 const mongoose = require('mongoose');
 
 const ReportSchema = new mongoose.Schema({
-    _id: false, // No need for a separate ID for this sub-document
-    user: { // User who reported the review
+    _id: false, 
+    user: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
@@ -31,20 +31,20 @@ const ReviewSchema = new mongoose.Schema({
     rating: {
         type: Number,
         min: 1,
-        max: 5, // Or 10, define your scale
+        max: 5, 
         required: [true, 'Please provide a rating between 1 and 5']
     },
     comment: {
         type: String,
         trim: true,
-        maxlength: [500, 'Comment cannot be more than 500 characters'] // Optional length limit
+        maxlength: [500, 'Comment cannot be more than 500 characters'] 
     },
-    user: { // User who wrote the review
+    user: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    movie: { // Movie being reviewed
+    movie: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Movie',
         required: true
@@ -65,7 +65,6 @@ const ReviewSchema = new mongoose.Schema({
 });
 
 // --- Indexes ---
-// Prevent user from submitting more than one review per movie
 ReviewSchema.index({ movie: 1, user: 1 }, { unique: true });
 
 // --- Static Method to Calculate Average Rating ---
@@ -102,12 +101,13 @@ ReviewSchema.post('save', function() {
     this.constructor.calculateAverageRating(this.movie);
 });
 
-ReviewSchema.pre('remove', function(next) {
+// FIX: Changed from 'remove' to 'deleteOne' to support newer Mongoose versions
+ReviewSchema.pre('deleteOne', { document: true, query: false }, function(next) {
     this._movieIdToRemove = this.movie;
     next();
 });
 
-ReviewSchema.post('remove', function() {
+ReviewSchema.post('deleteOne', { document: true, query: false }, function() {
      if (this._movieIdToRemove) {
         this.constructor.calculateAverageRating(this._movieIdToRemove);
      }

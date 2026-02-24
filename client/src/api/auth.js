@@ -30,8 +30,7 @@ export const googleLoginApi = () => {
     window.open(`${import.meta.env.VITE_API_BASE_URL || ''}${API_URL}/google`, "_self");
 };
 
-// --- NEW API CALLS FOR OTP ---
-
+// --- OTP API CALLS ---
 export const checkEmailApi = async (email) => {
     try {
         const response = await axios.post(`${API_URL}/check-email`, { email });
@@ -51,4 +50,24 @@ export const verifyOtpApi = async (email, otp) => {
         const response = await axios.post(`${API_URL}/verify-otp`, { email, otp });
         return response.data;
     } catch (error) { throw error.response?.data || new Error('Verify OTP failed'); }
+};
+
+// --- FORGOT & RESET PASSWORD API CALLS ---
+export const forgotPasswordApi = async (email) => {
+    try {
+        // Return the full response object so the frontend can read response.data.data
+        const response = await axios.post(`${API_URL}/forgotpassword`, { email });
+        return response;
+    } catch (error) { 
+        throw error; 
+    }
+};
+
+export const resetPasswordApi = async (token, password) => {
+    try {
+        const response = await axios.put(`${API_URL}/resetpassword/${token}`, { password });
+        return response.data;
+    } catch (error) { 
+        throw error.response?.data || new Error('Failed to reset password'); 
+    }
 };

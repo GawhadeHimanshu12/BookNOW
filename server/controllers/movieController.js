@@ -28,7 +28,6 @@ exports.checkReviewEligibility = async (req, res) => {
         }
 
         // 2. Check for VERIFIED booking (Confirmed/CheckedIn)
-        // Optimization: Find bookings directly via deep query if possible, or two-step
         const showtimes = await Showtime.find({ movie: movieId }).select('_id');
         const showtimeIds = showtimes.map(s => s._id);
 
@@ -80,7 +79,7 @@ exports.getMovies = async (req, res) => {
         }
 
         // Sorting
-        let sortOptions = { releaseDate: -1 }; // Default: Newest first
+        let sortOptions = { releaseDate: -1 }; 
         if (sort === 'rating_desc') sortOptions = { averageRating: -1, releaseDate: -1 };
         else if (sort === 'rating_asc') sortOptions = { averageRating: 1, releaseDate: -1 };
         else if (sort === 'title_asc') sortOptions = { title: 1 };
@@ -133,13 +132,11 @@ exports.createMovie = async (req, res) => {
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     try {
-        // Validation: Check for duplicates
         const existing = await Movie.exists({ title: req.body.title });
         if (existing) {
             return res.status(400).json({ errors: [{ msg: 'Movie with this title already exists' }] });
         }
 
-        // Create
         const movie = await Movie.create({
             ...req.body,
             addedBy: req.user.id
@@ -161,7 +158,6 @@ exports.updateMovie = async (req, res) => {
         let movie = await Movie.findById(req.params.id);
         if (!movie) return res.status(404).json({ msg: 'Movie not found' });
 
-        // Authorization
         if (movie.addedBy.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ msg: 'Not authorized to update this movie' });
         }
@@ -187,8 +183,6 @@ exports.deleteMovie = async (req, res) => {
         const movie = await Movie.findById(req.params.id);
         if (!movie) return res.status(404).json({ msg: 'Movie not found' });
 
-        // DATA INTEGRITY CHECK: 
-        // Do not delete movie if there are upcoming showtimes
         const activeShowtimes = await Showtime.exists({ 
             movie: req.params.id,
             startTime: { $gte: new Date() } 
@@ -200,7 +194,8 @@ exports.deleteMovie = async (req, res) => {
             });
         }
 
-        await movie.remove();
+        // FIX: Changed from .remove() to .deleteOne()
+        await movie.deleteOne();
         res.status(200).json({ msg: 'Movie deleted successfully' });
 
     } catch (err) {

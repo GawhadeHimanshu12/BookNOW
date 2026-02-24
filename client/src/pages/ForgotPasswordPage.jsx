@@ -15,13 +15,13 @@ import { Link as RouterLink } from 'react-router-dom';
 
 const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
-    const [message, setMessage] = useState(''); // For success/info messages
-    const [error, setError] = useState(''); // For error messages
+    const [message, setMessage] = useState(''); 
+    const [error, setError] = useState(''); 
     const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
-        setError(''); // Clear error on change
-        setMessage(''); // Clear message on change
+        setError(''); 
+        setMessage(''); 
         setEmail(e.target.value);
     };
 
@@ -36,12 +36,11 @@ const ForgotPasswordPage = () => {
         setIsLoading(true);
         try {
             const response = await forgotPasswordApi(email);
-            // Backend always returns success for security, show the message it sends
-            setMessage(response.data || 'Password reset instructions have been sent if the email is registered.');
+            // Show the success message from backend
+            setMessage(response.data.data || response.data.msg || 'Password reset instructions have been sent.');
             setEmail(''); // Clear input field on success
         } catch (err) {
-            // Show specific error from API if available, otherwise generic
-            setError(err?.response?.data?.msg || err.message || 'Failed to send reset request.');
+            setError(err?.response?.data?.msg || err.message || 'Failed to send reset request. Is this email verified in AWS SES?');
         } finally {
             setIsLoading(false);
         }
@@ -53,9 +52,15 @@ const ForgotPasswordPage = () => {
                 <Typography component="h1" variant="h5" gutterBottom>
                     Forgot Password
                 </Typography>
+                
+                <Alert severity="warning" sx={{ mb: 2, fontSize: '0.75rem', py: 0, width: '100%' }}>
+                    <strong>Note:</strong> AWS SES is in Sandbox mode. Reset links will only be sent to verified Sandbox emails.
+                </Alert>
+
                 <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
                     Enter your email address and we'll send you a link to reset your password.
                 </Typography>
+                
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: '100%' }}>
                     {error && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{error}</Alert>}
                     {message && <Alert severity="success" sx={{ mb: 2, width: '100%' }}>{message}</Alert>}

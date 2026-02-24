@@ -7,15 +7,22 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
-const helmet = require('helmet'); // RECOMMENDED: Install via 'npm install helmet'
+const helmet = require('helmet'); 
 const connectDB = require('./config/db');
-require('./config/passport-setup'); // Just import to execute the setup logic
+require('./config/passport-setup'); 
+
+// --- NEW: Import the Auto Seeder ---
+const runAutoSeeder = require('./utils/autoSeeder');
 
 // --- Initialize Express App ---
 const app = express();
 
-// --- Connect to Database ---
-connectDB();
+// --- Connect to Database & Run Seeder ---
+connectDB().then(() => {
+    // Run the seeder once immediately when the server starts
+    // (It will skip things that already exist, and generate new showtimes)
+    runAutoSeeder();
+});
 
 // --- Core Middlewares ---
 // 1. Security Headers
@@ -23,7 +30,6 @@ app.use(helmet());
 
 // 2. CORS
 app.use(cors({
-    // In production, strictly use the env var. In dev, allow localhost.
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true
 }));
@@ -37,11 +43,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        // Secure cookies are required in production (HTTPS)
+        maxAge: 24 * 60 * 60 * 1000, 
         secure: process.env.NODE_ENV === 'production', 
-        httpOnly: true, // Prevents client-side JS from accessing the cookie
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Adjust based on your cross-site needs
+        httpOnly: true, 
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
 }));
 
@@ -85,7 +90,6 @@ app.use('/api/payments', paymentRoutes);
 app.use((err, req, res, next) => {
     console.error('[Global Error Handler]:', err.stack);
     
-    // Hide stack trace in production
     const response = {
         success: false,
         msg: err.message || 'Internal Server Error'
@@ -106,7 +110,6 @@ if (process.env.NODE_ENV !== 'production') {
         console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     });
 } else {
-    // In production, let the process manager (like PM2) handle logging or just start silently
     app.listen(PORT);
 }
 
