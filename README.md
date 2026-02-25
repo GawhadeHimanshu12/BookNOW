@@ -1,166 +1,67 @@
-# BookNOW - Movie & Event Ticketing Platform
+# BookNOW
 
-BookNOW is a full-stack MERN application inspired by platforms like BookMyShow, designed to provide a seamless experience for Browse movies and events, selecting seats, and booking tickets. It features distinct dashboards for users, event organizers, and administrators.
+**Live Project URL:** [https://13.126.248.37.nip.io](https://13.126.248.37.nip.io)
 
-## ✨ Key Features
+## Overview
+BookNOW is a comprehensive, full-stack MERN (MongoDB, Express, React, Node.js) application designed for the seamless ticketing and booking of movies and events. The platform serves as a multi-vendor ecosystem, allowing regular users to book tickets, venue organizers to manage their theaters and events, and administrators to oversee the entire platform. 
 
-* **User Authentication:** Secure registration, login, and JWT-based session management. Includes password reset via email.
-* **Role-Based Access Control:**
-    * **Users:** Browse content, book tickets, view booking history, write reviews.
-    * **Organizers:** Manage their venues, create and manage showtimes (with tiered pricing), view bookings for their events/movies, manage their profile. Organizer accounts require admin approval.
-    * **Admins:** Full oversight including user management (approve organizers), content management (movies, events, venues), city and promo code management, view all bookings, and platform statistics.
-* **Content Discovery:**
-    * Homepage displaying "Now Showing" movies and "Upcoming Events".
-    * Detailed pages for movies and events.
-    * Global search functionality for movies, events, and venues.
-* **Booking System:**
-    * Interactive seat map for seat selection.
-    * **Tiered Pricing:** Organizers can set different prices for different seat types (e.g., Normal, VIP, Premium) for each showtime.
-    * Promo code application.
-    * Booking confirmation with a unique QR code for tickets.
-* **Review System:** Users can submit ratings and comments for movies they've booked.
-* **Admin & Organizer Dashboards:** Comprehensive UIs for managing platform aspects and organizer-specific content.
-* **Email Notifications:** For password resets and booking confirmations.
+The application features secure authentication, dynamic seat mapping, real-time availability checking, automated data seeding, and role-based access control. It is deployed in a production environment on AWS EC2.
 
-## 🛠️ Tech Stack
+## System Architecture
 
-* **Frontend:**
-    * React (with Vite)
-    * React Router DOM (v6) for client-side routing
-    * Material-UI (MUI) for UI components and styling
-    * Axios for API communication
-    * Day.js for date/time manipulation
-    * `qrcode.react` for QR code generation
-    * Context API for global state management (e.g., Authentication)
-* **Backend:**
-    * Node.js
-    * Express.js for the RESTful API framework
-    * MongoDB (with Mongoose ODM) as the database
-    * JWT (JSON Web Tokens) for authentication
-    * `bcryptjs` for password hashing
-    * `express-validator` for input validation
-    * `nodemailer` for sending emails
-    * `nanoid` for generating unique booking reference IDs
-    * MongoDB Transactions for atomic operations (requires replica set, e.g., MongoDB Atlas)
-* **Development Tools:**
-    * Nodemon for automatic server restarts
-    * ESLint for code linting
+The application follows a modern, decoupled client-server architecture deployed on Amazon Web Services (AWS).
 
-## 🚀 Getting Started
+* **Client Tier (Frontend):** A Single Page Application (SPA) built with React.js and packaged using Vite. It utilizes React Router for client-side navigation and React Context API for global state management (such as user authentication sessions).
+* **Web Server / Reverse Proxy Tier:** Nginx is configured on the AWS EC2 instance to serve the compiled static React files and act as a reverse proxy. It securely routes incoming API traffic to the underlying Node.js application.
+* **Application Tier (Backend):** A RESTful API built with Node.js and Express.js. The server runs continuously in the background using the PM2 process manager to ensure high availability and automatic restarts.
+* **Data Tier:** MongoDB (via MongoDB Atlas) serves as the primary NoSQL database, structured with Mongoose Object Data Modeling (ODM) to enforce schema validation and relationships between entities.
 
-Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
+## External Integrations
+* **Razorpay Payment Gateway:** Securely processes online transactions for ticket bookings, utilizing webhooks to update booking statuses in real-time.
+* **AWS SES (Simple Email Service):** Handles secure email dispatch for One-Time Passwords (OTPs), user verification, and booking confirmation tickets.
+* **Google OAuth 2.0:** Integrated via Passport.js for seamless third-party authentication.
+* **TMDB API:** Utilized by backend seeding scripts to populate the database with real-world, up-to-date movie data.
 
-### Prerequisites
+## Core Features
 
-* Node.js (v18.x or later recommended)
-* npm (v9.x or later) or yarn
-* MongoDB (Ensure you have a MongoDB instance running. For full transaction support as implemented in the controllers, this instance **must be configured as a replica set**. MongoDB Atlas free tier provides this by default.)
+### User Module
+* **Authentication & Security:** Secure login and registration with hashed passwords. Supports Google OAuth 2.0 and AWS SES-powered OTP email verification for password resets and account validation.
+* **Discovery & Search:** Global search and filtering capabilities to find movies, events, and venues based on city and availability.
+* **Dynamic Booking Engine:** Interactive visual seat map allowing users to select specific seats. The system prevents double-booking through real-time database validation and processes payments via Razorpay.
+* **User Dashboard:** A dedicated portal for users to view past and upcoming bookings, download digital tickets (QR codes), and manage their profile.
+* **Review System:** Verified users can leave ratings and text reviews for movies and events they have attended.
 
-### Installation & Setup
+### Organizer Module
+* **Venue Management:** Organizers can register physical locations (theaters, event grounds), defining screen capacity and standard seating layouts.
+* **Showtime Scheduling:** Interface to link movies or events to specific venues, setting dates, times, and dynamic ticket pricing.
+* **Sales Tracking:** Dedicated dashboard to view ticket sales, revenue statistics, and active bookings for their specific venues.
+* **Ticket Scanning:** Built-in endpoints to support QR code scanning at the venue doors to mark digital tickets as verified and used.
 
-1.  **Clone the Repository:**
-    ```bash
-    git clone <your-repository-url> BookNOW
-    cd BookNOW
-    ```
+### Admin Module
+* **Platform Moderation:** Super-admin privileges to approve or reject new organizer accounts and ban or unban users.
+* **Content Management:** Full CRUD (Create, Read, Update, Delete) access over movies, events, venues, and user reviews to moderate inappropriate content.
+* **Marketing & Promotions:** Ability to generate and manage global Promo Codes (percentage-based or flat discounts) with expiration dates and usage limits.
+* **Global Analytics:** High-level platform statistics tracking total users, total revenue, and overall booking volume.
 
-2.  **Backend Setup:**
-    * Navigate to the server directory:
-        ```bash
-        cd server
-        ```
-    * Install dependencies:
-        ```bash
-        npm install
-        # or
-        # yarn install
-        ```
-    * Create a `.env` file in the `server` directory by copying `server/.env.example` (if you create one) or by using the structure provided during codebase generation. Populate it with your:
-        * MongoDB Atlas connection string (`MONGODB_URI`) - **ensure it points to a replica set for transactions.**
-        * JWT Secret (`JWT_SECRET`)
-        * Email service credentials (e.g., Mailtrap or SendGrid for `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM_ADDRESS`)
-        * `FRONTEND_URL` (e.g., `http://localhost:5173`)
-        * Default admin credentials for seeding (`DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_PASSWORD`, `DEFAULT_ADMIN_NAME`)
-    * The port for the backend is typically set in the `.env` file (`PORT=5001`).
+## Technology Stack
 
-3.  **Frontend Setup:**
-    * Navigate to the client directory:
-        ```bash
-        cd ../client 
-        # (from the server directory, or directly to BookNOW/client from project root)
-        ```
-    * Install dependencies:
-        ```bash
-        npm install
-        # or
-        # yarn install
-        ```
-    * The client primarily uses Vite's proxy to connect to the backend, so direct API URLs in a client-side `.env` are usually not needed. The `vite.config.js` handles proxying `/api` requests.
+**Frontend**
+* React.js (Vite)
+* Context API (State Management)
+* Axios (HTTP Client)
+* Tailwind CSS / Material UI (UI Component Libraries)
 
-### Running the Application
+**Backend**
+* Node.js & Express.js
+* Mongoose (MongoDB ODM)
+* Passport.js (Google OAuth Strategy)
+* Razorpay Node SDK
+* JSON Web Tokens (JWT) & Express-Session
+* Helmet & CORS (Security Middleware)
 
-1.  **Start the Backend Server:**
-    * In the `server` directory:
-        ```bash
-        npm run dev
-        ```
-    * This will typically start the server on `http://localhost:5001` (or the port specified in your `.env`).
-
-2.  **Start the Frontend Development Server:**
-    * In a new terminal, navigate to the `client` directory:
-        ```bash
-        npm run dev
-        ```
-    * This will typically start the frontend on `http://localhost:5173`. Open this URL in your browser.
-
-### Seeding Data
-
-The project includes scripts to seed initial data:
-
-1.  **Seed Default Admin User:**
-    * Ensure your backend server is running or at least that your `.env` file in the `server` directory has the `MONGODB_URI` and `DEFAULT_ADMIN_...` variables set.
-    * In the `server` directory, run:
-        ```bash
-        npm run seed:admin
-        ```
-    * This will create a default admin user if one doesn't already exist with the specified email.
-
-2.  **Seed Sample Data (Movies, Venues, etc.):**
-    * In the `server` directory, run:
-        ```bash
-        npm run seed:data
-        ```
-    * To destroy all sample data (excluding users managed by `seed:admin`):
-        ```bash
-        npm run seed:data:destroy
-        ```
-
-## ⚙️ Environment Variables
-
-Ensure you have a `.env` file in the `server` directory with the following variables (refer to the `.env` example provided during code generation for details):
-
-* `PORT`
-* `MONGODB_URI` (Crucial: For transactions, this must point to a MongoDB replica set, e.g., Atlas free tier or higher)
-* `JWT_SECRET`
-* `JWT_EXPIRES_IN`
-* `NODE_ENV`
-* `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM_ADDRESS`, `EMAIL_SECURE`
-* `DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_PASSWORD`, `DEFAULT_ADMIN_NAME`
-* `FRONTEND_URL`
-
-## 📜 Available Scripts
-
-In the `server` directory:
-* `npm start`: Starts the server in production mode (uses `node server.js`).
-* `npm run dev`: Starts the server in development mode with `nodemon` for auto-restarts.
-* `npm run seed:admin`: Creates or updates the default admin user.
-* `npm run seed:data`: Populates the database with sample movies, venues, etc.
-* `npm run seed:data:destroy`: Removes the sample data populated by `seed:data`.
-
-In the `client` directory:
-* `npm run dev`: Starts the Vite development server for the frontend.
-* `npm run build`: Builds the frontend for production (output to `client/dist`).
-* `npm run lint`: Lints the frontend code.
-* `npm run preview`: Serves the production build locally for preview.
-
-## 📂 Project Structure Overview
+**Infrastructure & Deployment**
+* AWS EC2 (Ubuntu Linux)
+* AWS SES (Email Service)
+* Nginx (Web Server)
+* PM2 (Process Manager)
+* MongoDB Atlas (Cloud Database)
