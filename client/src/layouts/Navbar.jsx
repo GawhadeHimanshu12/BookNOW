@@ -1,13 +1,13 @@
 // client/src/layouts/Navbar.jsx
-import React, { useState } from 'react'; // Added useState
+import React, { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
     AppBar, Toolbar, Typography, Button, Box, Container, Link as MuiLink,
     CircularProgress, IconButton, TextField, InputAdornment
-} from '@mui/material'; // Added TextField, InputAdornment
+} from '@mui/material'; 
 import MenuIcon from '@mui/icons-material/Menu';
-import SearchIcon from '@mui/icons-material/Search'; // Added SearchIcon
+import SearchIcon from '@mui/icons-material/Search'; 
 
 function Navbar() {
     const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -27,13 +27,13 @@ function Navbar() {
         event.preventDefault();
         if (searchQuery.trim()) {
             navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-            setSearchQuery(''); // Optionally clear search bar after submit
+            setSearchQuery(''); 
         }
     };
 
     return (
         <AppBar position="sticky" sx={{ bgcolor: 'grey.900', boxShadow: 1 }}>
-            <Container maxWidth="xl"> {/* Changed to xl for more space if needed */}
+            <Container maxWidth="xl"> 
                 <Toolbar disableGutters>
                     <Typography
                         variant="h6" noWrap component={RouterLink} to="/"
@@ -41,10 +41,7 @@ function Navbar() {
                     >
                         BookNOW
                     </Typography>
-
-                    {/* Mobile Menu Icon & Search - Placeholder for more complex mobile nav */}
                     <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
-                        {/* <IconButton size="large" aria-label="menu" color="inherit" sx={{ mr: 1 }} > <MenuIcon /> </IconButton> */}
                          <Typography
                             variant="h6" noWrap component={RouterLink} to="/"
                             sx={{ fontWeight: 700, color: 'error.main', textDecoration: 'none', flexGrow: 1 }}

@@ -1,8 +1,6 @@
 // client/src/components/organizer/MyVenues.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { getMyVenuesApi } from '../../api/organizer'; // API for fetching organizer's venues
-// Import venue CRUD APIs if adding actions here (or they'll be on a separate VenueEditPage)
-// import { createVenueApi, updateVenueApi, deleteVenueApi } from '../../api/venues'; 
+import { getMyVenuesApi } from '../../api/organizer'; 
 import {
     Box, Button, Typography, Paper, List, ListItem, ListItemText, IconButton,
     CircularProgress, Alert, Chip, Tooltip, Divider, Link as MuiLink, Grid
@@ -12,19 +10,11 @@ import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
-// Placeholder for a Venue Form/Modal (to be implemented later)
-// const VenueFormModal = ({ open, onClose, venueData, onSubmit }) => { ... };
-
 const MyVenues = () => {
     const [venues, setVenues] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
-
-    // Add Modal states later if implementing inline editing/creation
-    // const [isModalOpen, setIsModalOpen] = useState(false);
-    // const [currentVenue, setCurrentVenue] = useState(null);
-    // const [isEditing, setIsEditing] = useState(false);
 
     const fetchMyVenues = useCallback(async () => {
         setIsLoading(true);
@@ -45,15 +35,12 @@ const MyVenues = () => {
     }, [fetchMyVenues]);
 
     const handleAddNewVenue = () => {
-        // Navigate to a dedicated page for creating/editing venues for organizers
-        // This is often cleaner than a large modal for complex forms.
-        // Or, open a modal by setting isModalOpen(true) and setCurrentVenue(null), setIsEditing(false)
-        navigate('/organizer/venues/new'); // Example route
+        navigate('/organizer/venues/new'); 
         console.log("Navigate to Add New Venue page/modal");
     };
 
     const handleEditVenue = (venueId) => {
-        navigate(`/organizer/venues/edit/${venueId}`); // Example route
+        navigate(`/organizer/venues/edit/${venueId}`); 
         console.log("Navigate to Edit Venue page/modal for venue:", venueId);
     };
 
@@ -69,7 +56,7 @@ const MyVenues = () => {
                     variant="contained"
                     color="primary"
                     startIcon={<AddCircleOutlineIcon />}
-                    onClick={handleAddNewVenue} // This will now work
+                    onClick={handleAddNewVenue} 
                 >
                     Add New Venue
                 </Button>
@@ -98,15 +85,10 @@ const MyVenues = () => {
                                                     <EditIcon />
                                                 </IconButton>
                                             </Tooltip>
-                                            {/* <Tooltip title="View Details (Public Page)">
-                                                 <IconButton component={RouterLink} to={`/venues/${venue._id}`} size="small"> 
-                                                     <VisibilityIcon color="action"/>
-                                                 </IconButton>
-                                             </Tooltip> */}
+                                    
                                         </Box>
                                     }
                                 >
-                                   {/* ... (ListItemText remains the same) ... */}
                                    <ListItemText
                                         primary={<Typography variant="subtitle1" sx={{fontWeight: 'medium'}}>{venue.name}</Typography>}
                                         secondary={

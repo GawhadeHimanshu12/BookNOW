@@ -1,13 +1,9 @@
 // server/controllers/userController.js
-// Purpose: Handles user profile management and password updates.
 
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 
-// @desc    Get current user profile
-// @route   GET /api/users/profile
-// @access  Private
 exports.getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
@@ -19,9 +15,7 @@ exports.getUserProfile = async (req, res) => {
     }
 };
 
-// @desc    Update user profile details (Name, Email, Org Name)
-// @route   PUT /api/users/profile
-// @access  Private
+
 exports.updateUserProfile = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -64,9 +58,6 @@ exports.updateUserProfile = async (req, res) => {
     }
 };
 
-// @desc    Update password (Logged in user)
-// @route   PUT /api/users/update-password
-// @access  Private
 exports.updatePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     
@@ -85,7 +76,6 @@ exports.updatePassword = async (req, res) => {
             return res.status(400).json({ msg: 'You used a social login. Please reset your password via email.' });
         }
 
-        // FIX: Directly using bcrypt.compare instead of user.matchPassword (which was missing in the model)
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.status(401).json({ msg: 'Incorrect current password' });

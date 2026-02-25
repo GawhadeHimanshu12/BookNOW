@@ -1,7 +1,7 @@
 // client/src/api/admin.js
-import axios from 'axios';
 
-const API_URL = '/api/admin'; // Base URL for admin routes
+import axios from 'axios';
+const API_URL = '/api/admin';
 
 // --- User Management ---
 export const getAllUsersAdminApi = async (params = {}) => {
@@ -127,19 +127,11 @@ export const deleteCityAdminApi = async (cityId) => {
     }
 };
 
-/**
- * Fetches all venues for admin, potentially including inactive ones.
- * @param {object} params - Optional query params, e.g., { page, limit, status: 'all' }
- * @returns {Promise<object>} - Promise resolving to an array of venue objects and pagination.
- */
-export const getAllVenuesAdminApi = async (params = { status: 'all', limit: 100 }) => { // Default to fetching all with a high limit
+
+export const getAllVenuesAdminApi = async (params = { status: 'all', limit: 100 }) => { 
     try {
-        // Admins might use the general /api/venues endpoint,
-        // but the backend controller for that endpoint would need to be aware of the admin role
-        // to return all venues (active and inactive).
-        // Alternatively, a dedicated /api/admin/venues endpoint could be created.
-        // For now, let's assume /api/venues can handle an admin request appropriately.
-        const response = await axios.get(`/api/venues`, { params }); // Using the public venue route
+
+        const response = await axios.get(`/api/venues`, { params }); 
         return response.data;
     } catch (error) {
         console.error('Error fetching all venues (Admin):', error.response?.data || error.message);
@@ -147,20 +139,10 @@ export const getAllVenuesAdminApi = async (params = { status: 'all', limit: 100 
     }
 };
 
-// --- Venue Management API Functions (for Admin) ---
-
-/**
- * Updates a venue (specifically for an admin, e.g., changing isActive status).
- * @param {string} venueId - The ID of the venue to update.
- * @param {object} venueData - Data to update (e.g., { isActive: false }).
- * @returns {Promise<object>} - Promise resolving to the updated venue object.
- */
+// --- Venue Management API Functions  ---
 export const updateVenueAdminApi = async (venueId, venueData) => {
     if (!venueId) throw new Error('Venue ID is required for update');
     try {
-        // Admin uses the general PUT /api/venues/:id route.
-        // The backend's roleMiddleware (isOrganizerOrAdmin) and venueController
-        // should allow an admin to update any venue.
         const response = await axios.put(`/api/venues/${venueId}`, venueData);
         return response.data;
     } catch (error) {
@@ -169,19 +151,8 @@ export const updateVenueAdminApi = async (venueId, venueData) => {
     }
 };
 
-// Note: Deleting venues by admin should be handled carefully.
-// The existing DELETE /api/venues/:id is protected by isOrganizerOrAdmin,
-// and the controller has an ownership check OR admin check.
-// So, an admin *can* delete venues using a generic deleteVenueApi if you add one to client/src/api/venues.js
-// For this component, we'll focus on activate/deactivate.
-
 // --- Booking Management API Functions (for Admin) ---
 
-/**
- * Fetches all bookings for admin, with pagination and filtering.
- * @param {object} params - E.g., { userId, showtimeId, movieId, eventId, venueId, date, status, page, limit, sort }
- * @returns {Promise<object>} - Promise resolving to an object containing bookings array and pagination info.
- */
 export const getAllBookingsAdminApi = async (params = {}) => {
     try {
         const response = await axios.get(`${API_URL}/bookings`, { params });
@@ -192,11 +163,6 @@ export const getAllBookingsAdminApi = async (params = {}) => {
     }
 };
 
-/**
- * Fetches a single booking by its ID (Admin access).
- * @param {string} bookingId - The ID of the booking.
- * @returns {Promise<object>} - Promise resolving to the booking object.
- */
 export const getBookingByIdAdminApi = async (bookingId) => {
     if (!bookingId) throw new Error('Booking ID is required');
     try {
@@ -208,16 +174,12 @@ export const getBookingByIdAdminApi = async (bookingId) => {
     }
 };
 
-/**
- * Cancels any booking by its ID (Admin action).
- * @param {string} bookingId - The ID of the booking to cancel.
- * @returns {Promise<object>} - Promise resolving to the success response.
- */
+
 export const cancelAnyBookingAdminApi = async (bookingId) => {
     if (!bookingId) throw new Error('Booking ID is required for cancellation');
     try {
         const response = await axios.put(`${API_URL}/bookings/${bookingId}/cancel`);
-        return response.data; // Expected: { success: true, msg: '...', booking: {...} }
+        return response.data; 
     } catch (error) {
         console.error(`Error cancelling booking ${bookingId} (Admin):`, error.response?.data || error.message);
         throw error.response?.data || new Error('Failed to cancel booking as admin');
@@ -225,11 +187,6 @@ export const cancelAnyBookingAdminApi = async (bookingId) => {
 };
 
 // --- Platform Statistics API Function ---
-
-/**
- * Fetches platform-wide statistics. Requires admin authentication.
- * @returns {Promise<object>} - Promise resolving to the statistics object.
- */
 export const getPlatformStatsAdminApi = async () => {
     try {
         const response = await axios.get(`${API_URL}/stats`);
@@ -240,11 +197,6 @@ export const getPlatformStatsAdminApi = async () => {
     }
 };
 
-/**
- * Fetches a single user by ID. Requires admin authentication.
- * @param {string} userId - The ID of the user to fetch.
- * @returns {Promise<object>} - Promise resolving to the user object.
- */
 export const getUserByIdAdminApi = async (userId) => {
     if (!userId) throw new Error('User ID is required');
     try {
@@ -257,10 +209,6 @@ export const getUserByIdAdminApi = async (userId) => {
 };
 
 
-/**
- * Fetches all reviews with pending reports. Requires admin authentication.
- * @returns {Promise<Array>} - Promise resolving to an array of review objects with report details.
- */
 export const getReportedReviewsAdminApi = async () => {
     try {
         const response = await axios.get(`${API_URL}/reviews/reported`);
@@ -271,12 +219,6 @@ export const getReportedReviewsAdminApi = async () => {
     }
 };
 
-/**
- * Resolves a report on a review. Requires admin authentication.
- * @param {string} reviewId - The ID of the review to resolve.
- * @param {string} action - The action to take ('delete' or 'dismiss').
- * @returns {Promise<object>} - Promise resolving to the success response.
- */
 export const resolveReportAdminApi = async (reviewId, action) => {
     if (!reviewId || !action) throw new Error('Review ID and action are required');
     try {

@@ -75,7 +75,7 @@ const UserProfileEditPage = () => {
                                 name="email"
                                 label="Email Address"
                                 value={formData.email}
-                                disabled // Email is not editable
+                                disabled 
                             />
                         </Grid>
                     </Grid>

@@ -1,11 +1,10 @@
 // client/src/pages/EventDetailsPage.jsx
-// Displays details for a specific event.
 import React, { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
-// API Calls
+
 import { getEventByIdApi } from '../api/events';
-import { getShowtimesApi } from '../api/showtimes'; // Use same showtime API
-// MUI Components
+import { getShowtimesApi } from '../api/showtimes';
+
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -35,9 +34,8 @@ const EventDetailsPage = () => {
     const [loadingShowtimes, setLoadingShowtimes] = useState(false);
     const [error, setError] = useState(null);
     const [showtimesError, setShowtimesError] = useState(null);
-    const [selectedDate, setSelectedDate] = useState(dayjs()); // Default to today
+    const [selectedDate, setSelectedDate] = useState(dayjs()); 
 
-    // Fetch Event Details
     useEffect(() => {
         let isMounted = true;
         const fetchEvent = async () => {
@@ -70,7 +68,6 @@ const EventDetailsPage = () => {
             console.log(`[EventDetailsPage] Fetching showtimes for event: ${event?._id}, date: ${formattedDate}`);
             setLoadingShowtimes(true); setShowtimesError(null); setShowtimes([]);
             try {
-                // Use eventId in the params
                 const params = { eventId: eventId, date: formattedDate, sort: 'startTime_asc' };
                 const response = await getShowtimesApi(params);
                 console.log('[EventDetailsPage] Showtimes API response:', response);
@@ -82,7 +79,6 @@ const EventDetailsPage = () => {
                 if (isMounted) setLoadingShowtimes(false);
             }
         };
-        // Only run if event loading is done AND event data exists
         if (!loadingEvent && event && eventId) {
             fetchShowtimes();
         } else {
@@ -91,12 +87,10 @@ const EventDetailsPage = () => {
         return () => { isMounted = false; };
     }, [eventId, selectedDate, event, loadingEvent]);
 
-    // Render loading/error/not found states
     if (loadingEvent) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress color="error" /></Box>;
     if (error) return <Container sx={{ py: 4 }}><Alert severity="error">{error}</Alert></Container>;
     if (!event) return <Container sx={{ py: 4 }}><Alert severity="warning">Event details not found.</Alert></Container>;
 
-    // Group showtimes (same logic as movie details)
     const showtimesByVenue = Array.isArray(showtimes) ? showtimes.reduce((acc, showtime) => {
         const venueName = showtime.venue?.name || event.address?.city || 'Venue N/A'; // Use event city if no venue linked
         if (!acc[venueName]) { acc[venueName] = { venue: showtime.venue || event.address, times: [] }; } // Store venue or address
@@ -153,13 +147,12 @@ const EventDetailsPage = () => {
 
                  <Divider sx={{ my: 4 }} />
 
-                 {/* Showtimes Section (If event uses showtime booking) */}
                  <Box component="section" sx={{ mb: 4 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
                         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
                            Tickets / Sessions for {selectedDate.format('ddd, DD MMM YYYY')}
                         </Typography>
-                        {/* TODO: Add Date Picker if event spans multiple days */}
+
                     </Box>
                      {showtimesError && <Alert severity="warning" sx={{my: 2}}>{showtimesError}</Alert>}
                      {loadingShowtimes ? ( <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress color="error" /></Box> )

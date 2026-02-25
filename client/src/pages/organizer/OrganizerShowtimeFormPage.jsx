@@ -50,7 +50,7 @@ const OrganizerShowtimeFormPage = ({ mode = 'create' }) => {
             const [venuesRes, moviesRes, eventsRes] = await Promise.all([
                 getMyVenuesApi(),
                 getMoviesApi({ limit: 1000, sort: 'title_asc' }),
-                getMyEventsApi() // Fetch organizer's events
+                getMyEventsApi() 
             ]);
             const fetchedVenues = venuesRes || [];
             const fetchedMovies = moviesRes.data || [];
@@ -95,8 +95,6 @@ const OrganizerShowtimeFormPage = ({ mode = 'create' }) => {
     useEffect(() => {
         fetchDropdownDataAndExistingShowtime();
     }, [fetchDropdownDataAndExistingShowtime]);
-    
-    // Update screens when venue changes
     useEffect(() => {
         if (showtimeData.venue && myVenues.length > 0) {
             const selectedVenueDetails = myVenues.find(v => v._id === showtimeData.venue);
@@ -104,12 +102,10 @@ const OrganizerShowtimeFormPage = ({ mode = 'create' }) => {
         } else {
              setAvailableScreens([]);
         }
-        // Reset screen and seat types if venue changes
         setShowtimeData(prev => ({...prev, screenId: '', priceTiers: []}));
         setUniqueSeatTypesInLayout([]);
     }, [showtimeData.venue, myVenues]);
 
-    // Update seat types and price tiers when screen changes
     useEffect(() => {
         if (showtimeData.screenId && showtimeData.venue) {
             const venue = myVenues.find(v => v._id === showtimeData.venue);
@@ -119,7 +115,6 @@ const OrganizerShowtimeFormPage = ({ mode = 'create' }) => {
                 screen.seatLayout.rows.forEach(row => row.seats.forEach(seat => types.add(seat.type || 'Normal')));
                 const filteredTypes = Array.from(types).filter(type => type !== 'Unavailable');
                 setUniqueSeatTypesInLayout(filteredTypes);
-                 // Auto-populate priceTiers for new showtime
                 if(mode === 'create') {
                      setShowtimeData(prev => ({...prev, priceTiers: filteredTypes.map(type => ({ seatType: type, price: ''}))}));
                 }
@@ -133,12 +128,10 @@ const OrganizerShowtimeFormPage = ({ mode = 'create' }) => {
                 ...prev,
                 itemType: newItemType,
                 movie: null,
-                event: null // Reset selections when type changes
+                event: null 
             }));
         }
     };
-    
-    // ... (other handlers like handleFieldChange, handleDateTimeChange, handlePriceTierChange are okay)
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -148,7 +141,6 @@ const OrganizerShowtimeFormPage = ({ mode = 'create' }) => {
         if ((showtimeData.itemType === 'movie' && !showtimeData.movie) || (showtimeData.itemType === 'event' && !showtimeData.event)) {
              setFormError("Please select a Movie or an Event."); setIsLoadingForm(false); return;
         }
-        // ... (other validations)
 
         const payload = {
             movie: showtimeData.movie?._id,

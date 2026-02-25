@@ -1,5 +1,4 @@
 // server/models/Movie.js
-// Purpose: Defines the schema for the Movie collection in MongoDB.
 
 const mongoose = require('mongoose');
 
@@ -19,7 +18,7 @@ const MovieSchema = new mongoose.Schema({
         required: [true, 'Please add a release date']
     },
     duration: {
-        type: Number, // Duration in minutes
+        type: Number, 
         required: [true, 'Please add the duration in minutes'],
         min: [1, 'Duration must be at least 1 minute']
     },
@@ -64,12 +63,12 @@ const MovieSchema = new mongoose.Schema({
     censorRating: {
         type: String,
         trim: true,
-        uppercase: true // e.g., 'U/A'
+        uppercase: true 
     },
     format: [{ 
         type: String,
         trim: true,
-        uppercase: true // Force '2D', '3D', 'IMAX' consistency
+        uppercase: true 
     }],
     averageRating: {
         type: Number,

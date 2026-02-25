@@ -1,5 +1,4 @@
 // server/routes/bookingRoutes.js
-// Purpose: Defines API routes related to bookings.
 
 const express = require('express');
 const {
@@ -7,7 +6,7 @@ const {
     getMyBookings,
     getBookingById,
     cancelBooking,
-    cancelPendingBooking // Correctly import the controller function
+    cancelPendingBooking 
 } = require('../controllers/bookingController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { check } = require('express-validator');
@@ -22,10 +21,6 @@ const createBookingValidation = [
 ];
 
 // --- Route Definitions ---
-
-// @route   POST /api/bookings
-// @desc    Create a new booking (status becomes 'PaymentPending')
-// @access  Private (Authenticated Users)
 router.post(
     '/',
     authMiddleware,
@@ -33,40 +28,28 @@ router.post(
     createBooking
 );
 
-// @route   GET /api/bookings/me
-// @desc    Get bookings for the logged-in user
-// @access  Private
 router.get(
     '/me',
     authMiddleware,
     getMyBookings
 );
 
-// @route   GET /api/bookings/:id
-// @desc    Get a specific booking by ID (checks ownership or admin role in controller)
-// @access  Private
 router.get(
     '/:id',
     authMiddleware,
     getBookingById
 );
 
-// @route   PUT /api/bookings/:id/cancel
-// @desc    Cancel a confirmed booking (user self-service)
-// @access  Private
 router.put(
     '/:id/cancel',
     authMiddleware,
     cancelBooking
 );
 
-// @route   PUT /api/bookings/:id/cancel-pending
-// @desc    Cancel a pending booking (e.g., user closes payment modal)
-// @access  Private
 router.put(
     '/:id/cancel-pending',
     authMiddleware,
-    cancelPendingBooking // CORRECTED: Use the imported controller function
+    cancelPendingBooking 
 );
 
 

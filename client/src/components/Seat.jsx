@@ -1,22 +1,19 @@
 // client/src/components/Seat.jsx
-// Renders a single seat button based on its status and type.
 import React from 'react';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
-// Import specific icons
-import ChairIcon from '@mui/icons-material/Chair'; // Generic/Unavailable
-import ChairOutlinedIcon from '@mui/icons-material/ChairOutlined'; // Available Normal
-import EventSeatIcon from '@mui/icons-material/EventSeat'; // Selected
-import AccessibleIcon from '@mui/icons-material/Accessible'; // Wheelchair
-import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal'; // Recliner/VIP/Premium
-import BlockIcon from '@mui/icons-material/Block'; // Booked
+import ChairIcon from '@mui/icons-material/Chair';
+import ChairOutlinedIcon from '@mui/icons-material/ChairOutlined'; 
+import EventSeatIcon from '@mui/icons-material/EventSeat';
+import AccessibleIcon from '@mui/icons-material/Accessible'; 
+import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal'; 
+import BlockIcon from '@mui/icons-material/Block';
 
 const Seat = ({ seatData, isSelected, onSelect }) => {
-    // Destructure with defaults
     const { identifier = 'N/A', type = 'Normal', isBooked = false } = seatData || {};
 
     let seatIcon;
-    let seatColor = 'success'; // Default to available color (green)
+    let seatColor = 'success'; 
     let isDisabled = false;
     let tooltipTitle = `Seat ${identifier} (${type})`;
 
@@ -30,7 +27,6 @@ const Seat = ({ seatData, isSelected, onSelect }) => {
         seatColor = 'error';
         tooltipTitle = `Seat ${identifier} (Selected)`;
     } else {
-        // Customize icon/color for AVAILABLE seats based on type
         switch (type?.toLowerCase()) {
             case 'premium':
             case 'vip':
@@ -48,7 +44,7 @@ const Seat = ({ seatData, isSelected, onSelect }) => {
                  isDisabled = true;
                  tooltipTitle = `Seat ${identifier} (Unavailable)`;
                  break;
-            default: // Normal available seat
+            default: 
                 seatIcon = <ChairOutlinedIcon />;
                 seatColor = 'success';
                 break;

@@ -8,7 +8,7 @@ const CitySchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please provide a city name'],
         trim: true,
-        unique: true, // Ensure city names are unique
+        unique: true, 
         index: true
     },
     state: {
@@ -16,14 +16,11 @@ const CitySchema = new mongoose.Schema({
         required: [true, 'Please provide the state'],
         trim: true
     },
-    isActive: { // Controls if the city appears in public listings/dropdowns
+    isActive: { 
         type: Boolean,
         default: true,
         index: true
     },
-    // Optional fields you might add later:
-    // isFeatured: { type: Boolean, default: false }, // Highlight major cities?
-    // imageUrl: { type: String }, // Image for the city?
     createdAt: {
         type: Date,
         default: Date.now

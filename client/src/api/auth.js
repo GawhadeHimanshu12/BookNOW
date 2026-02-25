@@ -55,7 +55,6 @@ export const verifyOtpApi = async (email, otp) => {
 // --- FORGOT & RESET PASSWORD API CALLS ---
 export const forgotPasswordApi = async (email) => {
     try {
-        // Return the full response object so the frontend can read response.data.data
         const response = await axios.post(`${API_URL}/forgotpassword`, { email });
         return response;
     } catch (error) { 

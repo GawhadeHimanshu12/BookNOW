@@ -1,5 +1,4 @@
 // server/routes/eventRoutes.js
-// Purpose: Defines API routes related to events.
 
 const express = require('express');
 const {
@@ -30,50 +29,32 @@ const eventValidationRules = [
 
 
 // --- Public Routes ---
-
-// @route   GET /api/events
-// @desc    Get all active/upcoming events (with filters)
-// @access  Public
 router.get('/', getEvents);
-
-// @route   GET /api/events/:id
-// @desc    Get a single event by ID
-// @access  Public
 router.get('/:id', getEventById);
 
 
 // --- Protected Routes ---
-
-// @route   POST /api/events
-// @desc    Create a new event
-// @access  Private (Admin or Approved Organizer)
 router.post(
     '/',
-    authMiddleware,         // 1. Check login
-    isOrganizerOrAdmin,     // 2. Check role (Controller checks approval/venue auth)
-    eventValidationRules,   // 3. Validate input
-    createEvent             // 4. Execute controller
+    authMiddleware,         
+    isOrganizerOrAdmin,     
+    eventValidationRules,  
+    createEvent             
 );
 
-// @route   PUT /api/events/:id
-// @desc    Update an event
-// @access  Private (Admin or Owning Organizer - checked in controller)
 router.put(
     '/:id',
-    authMiddleware,         // 1. Check login
-    isOrganizerOrAdmin,     // 2. Basic role check (Controller checks ownership/venue auth)
-    eventValidationRules,   // 3. Validate input
-    updateEvent             // 4. Execute controller
+    authMiddleware,         
+    isOrganizerOrAdmin,   
+    eventValidationRules,  
+    updateEvent             
 );
 
-// @route   DELETE /api/events/:id
-// @desc    Delete an event
-// @access  Private (Admin or Owning Organizer - checked in controller)
 router.delete(
     '/:id',
-    authMiddleware,         // 1. Check login
-    isOrganizerOrAdmin,     // 2. Basic role check (Controller checks ownership/venue auth)
-    deleteEvent             // 3. Execute controller
+    authMiddleware,         
+    isOrganizerOrAdmin,     
+    deleteEvent            
 );
 
 

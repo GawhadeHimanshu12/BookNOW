@@ -3,7 +3,6 @@ import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
 
-// Define styles for the PDF
 const styles = StyleSheet.create({
   page: {
     padding: 30,

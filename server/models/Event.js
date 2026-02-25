@@ -1,5 +1,4 @@
 // server/models/Event.js
-// Purpose: Defines the schema for the Event collection.
 
 const mongoose = require('mongoose');
 
@@ -46,7 +45,7 @@ const EventSchema = new mongoose.Schema({
         type: String,
         validate: {
             validator: function(v) {
-                if (!v) return true; // Optional field
+                if (!v) return true; 
                 return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v);
             },
             message: 'Please use a valid URL'
@@ -57,7 +56,6 @@ const EventSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     }],
-    // FIX: Removed 'organizerInfo'. Use populate('organizer') to get current details.
     
     status: { 
         type: String,
@@ -76,10 +74,8 @@ const EventSchema = new mongoose.Schema({
     }
 });
 
-// Text Search Index
 EventSchema.index({ title: 'text', description: 'text' });
 
-// Compound Index for common "Upcoming Events" queries
 EventSchema.index({ status: 1, startDate: 1 });
 EventSchema.index({ 'address.city': 1, status: 1 });
 

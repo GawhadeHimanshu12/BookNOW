@@ -3,7 +3,6 @@
 
 // Checks if the user is an admin
 exports.isAdmin = (req, res, next) => {
-    // req.user is guaranteed to exist due to authMiddleware running first
     if (req.user && req.user.role === 'admin') {
         next();
     } else {

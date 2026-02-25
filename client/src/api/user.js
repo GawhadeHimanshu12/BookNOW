@@ -3,11 +3,6 @@ import axios from 'axios';
 
 const API_URL = '/api/users';
 
-/**
- * Updates the profile for the currently logged-in user.
- * @param {object} profileData - { name }
- * @returns {Promise<object>} - The updated user object.
- */
 export const updateMyProfileApi = async (profileData) => {
     try {
         const response = await axios.put(`${API_URL}/profile`, profileData);

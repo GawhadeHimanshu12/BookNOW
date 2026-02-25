@@ -8,24 +8,18 @@ import Typography from '@mui/material/Typography';
 
 const GoogleAuthSuccessPage = () => {
     const [searchParams] = useSearchParams();
-    const { loadUser } = useAuth(); // We use loadUser to fetch profile immediately
+    const { loadUser } = useAuth(); 
     const navigate = useNavigate();
 
     useEffect(() => {
         const token = searchParams.get('token');
         if (token) {
-            // 1. Save token
             localStorage.setItem('authToken', token);
-            
-            // 2. Trigger user load
             loadUser(token);
-
-            // 3. Redirect to home or dashboard after a brief delay
             setTimeout(() => {
                 navigate('/');
             }, 1000);
         } else {
-            // No token found, go back to login
             navigate('/login');
         }
     }, [searchParams, loadUser, navigate]);

@@ -75,7 +75,6 @@ const WriteReviewPage = () => {
         setSubmitError(null);
         try {
             await createReviewApi(movieId, { rating, comment });
-            // On success, navigate back to the movie details page
             navigate(`/movies/${movieId}`);
         } catch (err) {
             setSubmitError(err.msg || err.message || 'Failed to submit review.');

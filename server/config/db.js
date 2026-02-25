@@ -4,12 +4,7 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
     try {
         console.log('[DB Connection] Attempting connection...'); 
-        
-        // SECURITY FIX: Never log the URI as it contains the password
-        // console.log('[DB Connection] URI:', process.env.MONGODB_URI); 
-
         await mongoose.connect(process.env.MONGODB_URI, { 
-            // Options are generally handled automatically by newer Mongoose versions
         });
         
         console.log(`MongoDB Connected: ${mongoose.connection.host}`);

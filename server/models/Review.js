@@ -1,5 +1,4 @@
 // File: /server/models/Review.js
-// Purpose: Defines the schema for the Review collection.
 
 const mongoose = require('mongoose');
 
@@ -67,7 +66,6 @@ const ReviewSchema = new mongoose.Schema({
 // --- Indexes ---
 ReviewSchema.index({ movie: 1, user: 1 }, { unique: true });
 
-// --- Static Method to Calculate Average Rating ---
 ReviewSchema.statics.calculateAverageRating = async function(movieId) {
     const Movie = mongoose.model('Movie');
     const stats = await this.aggregate([
@@ -101,7 +99,6 @@ ReviewSchema.post('save', function() {
     this.constructor.calculateAverageRating(this.movie);
 });
 
-// FIX: Changed from 'remove' to 'deleteOne' to support newer Mongoose versions
 ReviewSchema.pre('deleteOne', { document: true, query: false }, function(next) {
     this._movieIdToRemove = this.movie;
     next();

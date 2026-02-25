@@ -1,5 +1,4 @@
 // File: /server/controllers/reviewController.js
-// Purpose: Contains logic for handling review-related API requests.
 
 const Review = require('../models/Review');
 const Movie = require('../models/Movie');
@@ -8,7 +7,6 @@ const Showtime = require('../models/Showtime');
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
-// --- Helper: Recalculate Movie Rating ---
 const calculateAverageRating = async (movieId) => {
     const stats = await Review.aggregate([
         { $match: { movie: movieId } },
@@ -34,9 +32,6 @@ const calculateAverageRating = async (movieId) => {
     }
 };
 
-// @desc    Get all reviews for a specific movie
-// @route   GET /api/movies/:movieId/reviews
-// @access  Public
 exports.getReviewsForMovie = async (req, res) => {
     const movieId = req.params.movieId;
 
@@ -57,9 +52,6 @@ exports.getReviewsForMovie = async (req, res) => {
     }
 };
 
-// @desc    Get all reviews written by the logged-in user
-// @route   GET /api/reviews/me
-// @access  Private
 exports.getMyReviews = async (req, res) => {
     const userId = req.user.id;
     try {
@@ -73,9 +65,6 @@ exports.getMyReviews = async (req, res) => {
     }
 };
 
-// @desc    Create a new review for a movie
-// @route   POST /api/movies/:movieId/reviews
-// @access  Private
 exports.createReview = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -126,9 +115,6 @@ exports.createReview = async (req, res) => {
     }
 };
 
-// @desc    Update a review written by the user
-// @route   PUT /api/reviews/:reviewId
-// @access  Private
 exports.updateReview = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -161,9 +147,6 @@ exports.updateReview = async (req, res) => {
     }
 };
 
-// @desc    Delete a review
-// @route   DELETE /api/reviews/:reviewId
-// @access  Private (Owner or Admin)
 exports.deleteReview = async (req, res) => {
     const reviewId = req.params.reviewId;
     const userId = req.user.id;
@@ -179,8 +162,6 @@ exports.deleteReview = async (req, res) => {
         if (review.user.toString() !== userId && userRole !== 'admin') {
              return res.status(403).json({ msg: 'User not authorized to delete this review' });
         }
-
-        // FIX: Changed from .remove() to .deleteOne()
         await review.deleteOne();
 
         res.status(200).json({ success: true, msg: 'Review deleted successfully' });
@@ -191,9 +172,6 @@ exports.deleteReview = async (req, res) => {
     }
 };
 
-// @desc    Like a review
-// @route   POST /api/reviews/:reviewId/like
-// @access  Private
 exports.likeReview = async (req, res) => {
     const reviewId = req.params.reviewId;
     const userId = req.user.id;
@@ -221,9 +199,6 @@ exports.likeReview = async (req, res) => {
     }
 };
 
-// @desc    Dislike a review
-// @route   POST /api/reviews/:reviewId/dislike
-// @access  Private
 exports.dislikeReview = async (req, res) => {
     const reviewId = req.params.reviewId;
     const userId = req.user.id;
@@ -251,9 +226,6 @@ exports.dislikeReview = async (req, res) => {
     }
 };
 
-// @desc    Report a review
-// @route   POST /api/reviews/:reviewId/report
-// @access  Private
 exports.reportReview = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });

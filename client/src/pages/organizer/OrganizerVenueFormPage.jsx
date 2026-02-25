@@ -67,7 +67,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
         }));
     };
 
-    // --- CORRECTED FACILITY HANDLING ---
+    // --- FACILITY HANDLING ---
     const handleFacilityInputChange = (e) => {
         setFacilityInput(e.target.value);
     };
@@ -80,7 +80,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
                 facilities: [...prev.facilities, newFacility]
             }));
         }
-        setFacilityInput(''); // Clear input field after adding
+        setFacilityInput(''); 
     };
 
     const handleFacilityRemove = (facilityToRemove) => {
@@ -89,7 +89,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
             facilities: prev.facilities.filter(f => f !== facilityToRemove)
         }));
     };
-    // --- END OF CORRECTED FACILITY HANDLING ---
+ 
 
     const handleScreenChange = (e) => {
         const { name, value } = e.target;
@@ -150,10 +150,10 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
             screens: venueData.screens.map(s => ({
                 name: s.name,
                 capacity: parseInt(s.capacity, 10),
-                seatLayout: s.seatLayout, // seatLayout is already an object
+                seatLayout: s.seatLayout, 
             }))
         };
-        // No need to delete seatLayoutInput from payload as it's not part of venueData.screens objects being submitted
+
 
         try {
             if (mode === 'edit') {
@@ -183,7 +183,6 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
                 {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
                 <Box component="form" onSubmit={handleSubmit}>
                     <Grid container spacing={3}>
-                        {/* Venue Name and Address Fields ... (remain the same as before) */}
                         <Grid item xs={12}>
                             <TextField name="name" label="Venue Name" value={venueData.name} onChange={handleChange} fullWidth required />
                         </Grid>
@@ -200,19 +199,19 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
                             <TextField name="zipCode" label="Zip Code" value={venueData.address.zipCode} onChange={handleAddressChange} fullWidth required />
                         </Grid>
 
-                        {/* --- CORRECTED FACILITIES SECTION --- */}
+                        {/* --- FACILITIES SECTION --- */}
                         <Grid item xs={12}>
                             <Divider sx={{ my: 1 }}><Typography variant="overline">Facilities</Typography></Divider>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <TextField
                                     label="Add Facility (e.g., Parking, F&B)"
                                     value={facilityInput}
-                                    onChange={handleFacilityInputChange} // Use specific handler for facility input
+                                    onChange={handleFacilityInputChange} 
                                     size="small"
                                     sx={{flexGrow: 1, mr: 1}}
-                                    onKeyPress={(e) => { // Optional: Add facility on Enter key
+                                    onKeyPress={(e) => { 
                                         if (e.key === 'Enter') {
-                                            e.preventDefault(); // Prevent form submission
+                                            e.preventDefault(); 
                                             handleFacilityAdd();
                                         }
                                     }}
@@ -220,7 +219,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
                                 <Button variant="outlined" onClick={handleFacilityAdd} startIcon={<AddCircleOutlineIcon />}>Add</Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1, p: 1, border: venueData.facilities.length > 0 ? '1px dashed grey' : 'none', borderRadius: 1, minHeight: venueData.facilities.length > 0 ? 'auto' : '0px' }}>
-                                {venueData.facilities.map((facility, index) => ( // Added index for key just in case of duplicate facility names during input, though Set would prevent it
+                                {venueData.facilities.map((facility, index) => (
                                     <Chip 
                                         key={`${facility}-${index}`} 
                                         label={facility} 
@@ -232,10 +231,7 @@ const OrganizerVenueFormPage = ({ mode = 'create' }) => {
                                 {venueData.facilities.length === 0 && <Typography variant="caption" color="textSecondary">No facilities added yet.</Typography>}
                             </Box>
                         </Grid>
-                        {/* --- END OF CORRECTED FACILITIES SECTION --- */}
-
-
-                        {/* Screens Section ... (remains the same as before) ... */}
+                    
                         <Grid item xs={12}>
                             <Divider sx={{ my: 1 }}><Typography variant="overline">Screens</Typography></Divider>
                             <Paper variant="outlined" sx={{p:2, mb:2}}>

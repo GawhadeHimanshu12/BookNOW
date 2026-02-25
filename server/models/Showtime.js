@@ -6,7 +6,6 @@ const PriceTierSchema = new mongoose.Schema({
     seatType: {
         type: String,
         required: [true, 'Seat type is required for a price tier (e.g., Normal, VIP)'],
-        // This should align with Venue.screens.seatLayout.seats.type
         enum: ['Normal', 'VIP', 'Premium', 'Recliner', 'Wheelchair', 'Luxury'] 
     },
     price: {
@@ -84,7 +83,6 @@ const ShowtimeSchema = new mongoose.Schema({
     }
 });
 
-// Ensure logic consistency: A showtime is for a Movie OR an Event, not both.
 ShowtimeSchema.pre('validate', function(next) {
     if (this.movie && this.event) {
         next(new Error('Showtime cannot be linked to both a Movie and an Event.'));
@@ -95,7 +93,6 @@ ShowtimeSchema.pre('validate', function(next) {
     }
 });
 
-// Compound indexes for common search queries
 ShowtimeSchema.index({ movie: 1, venue: 1, startTime: 1 });
 ShowtimeSchema.index({ event: 1, venue: 1, startTime: 1 });
 

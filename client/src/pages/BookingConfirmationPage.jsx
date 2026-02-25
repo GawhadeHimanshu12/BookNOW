@@ -19,7 +19,6 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import DownloadIcon from '@mui/icons-material/Download';
 
-// Import QR Code and Ticket Components
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import TicketDocument from '../components/TicketDocument';
 
@@ -64,12 +63,10 @@ const BookingConfirmationPage = () => {
         fetchBooking();
         return () => { isMounted = false; };
     }, [bookingId, user, isAuthLoading]);
-
-    // Effect to generate QR code data URL from canvas for PDF
     useEffect(() => {
         if (qrCodeValue && qrCanvasRef.current) {
             const canvas = qrCanvasRef.current;
-            // A short delay ensures canvas has time to render before we grab the data URL
+
             setTimeout(() => {
                 const dataUrl = canvas.toDataURL('image/png');
                 setQrCodeDataURL(dataUrl);
@@ -145,7 +142,6 @@ const BookingConfirmationPage = () => {
                          <Typography variant="caption" color="text.secondary" sx={{mt: 1}}>
                              Show this at the venue entrance for check-in.
                          </Typography>
-                         {/* Hidden canvas for generating PDF image data */}
                          <QRCodeCanvas
                             ref={qrCanvasRef}
                             value={qrCodeValue}

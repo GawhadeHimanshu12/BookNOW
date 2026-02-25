@@ -23,8 +23,8 @@ const BookingManagement = () => {
     const [totalBookings, setTotalBookings] = useState(0);
     const [filters, setFilters] = useState({
         userId: '',
-        showtimeId: '', // Could expand to movie/event/venue IDs later if needed for more complex filtering
-        date: null, // For bookingTime
+        showtimeId: '',
+        date: null, 
         status: '',
         bookingRefId: '',
     });
@@ -76,14 +76,13 @@ const BookingManagement = () => {
     };
 
     const handleApplyFilters = () => {
-        setPage(0); // Reset to first page when filters change
+        setPage(0); 
         fetchBookings(0, rowsPerPage, filters);
     };
     
     const handleClearFilters = () => {
         setFilters({ userId: '', showtimeId: '', date: null, status: '', bookingRefId: '' });
         setPage(0);
-        // fetchBookings will be called by useEffect due to filters changing
     };
 
     const handleChangePage = (event, newPage) => {
@@ -97,7 +96,7 @@ const BookingManagement = () => {
 
     const handleViewDetails = async (bookingId) => {
         try {
-            setIsLoading(true); // Show loading for modal fetch
+            setIsLoading(true);
             const details = await getBookingByIdAdminApi(bookingId);
             setSelectedBookingDetails(details);
             setDetailsModalOpen(true);
@@ -117,8 +116,7 @@ const BookingManagement = () => {
         if (!bookingToCancel) return;
         try {
             await cancelAnyBookingAdminApi(bookingToCancel._id);
-            fetchBookings(page, rowsPerPage, filters); // Refresh list
-            // If the detailed view modal is open for this booking, update its status or close it
+            fetchBookings(page, rowsPerPage, filters); 
             if (selectedBookingDetails && selectedBookingDetails._id === bookingToCancel._id) {
                 setSelectedBookingDetails(prev => ({ ...prev, status: 'Cancelled' }));
             }
@@ -143,7 +141,6 @@ const BookingManagement = () => {
 
 
     if (isLoading && bookings.length === 0 && !detailsModalOpen) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress color="error" /></Box>;
-    // Don't show main list error if modal is open and loading details
     if (error && !detailsModalOpen) return <Alert severity="error" sx={{ m: 2 }}>{error}</Alert>;
 
     return (

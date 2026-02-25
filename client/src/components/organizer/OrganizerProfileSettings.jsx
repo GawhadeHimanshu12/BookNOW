@@ -1,16 +1,16 @@
 // client/src/components/organizer/OrganizerProfileSettings.jsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext'; // To get current user data
+import { useAuth } from '../../contexts/AuthContext';
 import { updateMyOrganizerProfileApi } from '../../api/organizer';
 import {
     Box, Button, Typography, Paper, TextField, Grid, CircularProgress, Alert, Snackbar
 } from '@mui/material';
 
 const OrganizerProfileSettings = () => {
-    const { user, loadUser, token } = useAuth(); // loadUser can refresh user data in context after update
+    const { user, loadUser, token } = useAuth(); 
     const [formData, setFormData] = useState({
         name: '',
-        email: '', // Typically not editable
+        email: '',
         organizationName: '',
     });
     const [isLoading, setIsLoading] = useState(false);
@@ -46,9 +46,9 @@ const OrganizerProfileSettings = () => {
         try {
             await updateMyOrganizerProfileApi(profileDataToUpdate);
             setSuccessMessage('Profile updated successfully!');
-            setIsEditing(false); // Exit edit mode
-            if (token) { // Check if token exists before calling loadUser
-              await loadUser(token); // Refresh user data in AuthContext
+            setIsEditing(false); 
+            if (token) { 
+              await loadUser(token); 
             }
         } catch (err) {
             setError(err.message || 'Failed to update profile.');
@@ -94,7 +94,7 @@ const OrganizerProfileSettings = () => {
                             name="email"
                             type="email"
                             value={formData.email}
-                            disabled // Email is usually not editable
+                            disabled 
                         />
                     </Grid>
                     <Grid item xs={12}>
@@ -116,7 +116,6 @@ const OrganizerProfileSettings = () => {
                                     variant="outlined" 
                                     onClick={() => {
                                         setIsEditing(false);
-                                        // Reset form to original user data if changes were made
                                         if(user) setFormData({name: user.name, email: user.email, organizationName: user.organizationName});
                                         setError(null);
                                     }}

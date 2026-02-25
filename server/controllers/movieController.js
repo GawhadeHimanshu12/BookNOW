@@ -1,5 +1,4 @@
 // server/controllers/movieController.js
-// Purpose: Handles Movie CRUD operations and review eligibility.
 
 const Movie = require('../models/Movie');
 const Showtime = require('../models/Showtime');
@@ -8,26 +7,22 @@ const Review = require('../models/Review');
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
 
-// Helper: Escape regex special characters
+
 const escapeRegex = (text) => {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 };
 
-// @desc    Check if current user can review a movie
-// @route   GET /api/movies/:movieId/review-eligibility
-// @access  Private
 exports.checkReviewEligibility = async (req, res) => {
     const { movieId } = req.params;
     const userId = req.user.id;
 
     try {
-        // 1. Check existing review
+
         const existingReview = await Review.exists({ movie: movieId, user: userId });
         if (existingReview) {
             return res.status(200).json({ isEligible: false, reason: 'already_reviewed' });
         }
 
-        // 2. Check for VERIFIED booking (Confirmed/CheckedIn)
         const showtimes = await Showtime.find({ movie: movieId }).select('_id');
         const showtimeIds = showtimes.map(s => s._id);
 
@@ -53,9 +48,7 @@ exports.checkReviewEligibility = async (req, res) => {
     }
 };
 
-// @desc    Get all movies (Filtered & Sorted)
-// @route   GET /api/movies
-// @access  Public
+
 exports.getMovies = async (req, res) => {
     try {
         const { status, genre, language, sort, page = 1, limit = 12 } = req.query;
@@ -111,9 +104,6 @@ exports.getMovies = async (req, res) => {
     }
 };
 
-// @desc    Get Single Movie
-// @route   GET /api/movies/:id
-// @access  Public
 exports.getMovieById = async (req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -124,9 +114,6 @@ exports.getMovieById = async (req, res) => {
     }
 };
 
-// @desc    Create Movie
-// @route   POST /api/movies
-// @access  Private (Admin / Approved Organizer)
 exports.createMovie = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -150,9 +137,6 @@ exports.createMovie = async (req, res) => {
     }
 };
 
-// @desc    Update Movie
-// @route   PUT /api/movies/:id
-// @access  Private (Admin / Owner)
 exports.updateMovie = async (req, res) => {
     try {
         let movie = await Movie.findById(req.params.id);
@@ -175,9 +159,6 @@ exports.updateMovie = async (req, res) => {
     }
 };
 
-// @desc    Delete Movie
-// @route   DELETE /api/movies/:id
-// @access  Private (Admin Only)
 exports.deleteMovie = async (req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -194,7 +175,6 @@ exports.deleteMovie = async (req, res) => {
             });
         }
 
-        // FIX: Changed from .remove() to .deleteOne()
         await movie.deleteOne();
         res.status(200).json({ msg: 'Movie deleted successfully' });
 

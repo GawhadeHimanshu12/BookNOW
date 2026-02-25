@@ -12,11 +12,9 @@ const sendEmail = require('../utils/sendEmail');
 const dayjs = require('dayjs');
 const { customAlphabet } = require('nanoid');
 
-// Using a more standard alphabet without easily confused characters (e.g., I, O, 0, 1)
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const generateBookingRefId = customAlphabet(ALPHABET, 6);
 
-// Helper to generate unique ID
 async function generateUniqueBookingRefId(session) {
     let bookingRefIdGenerated;
     let attempts = 0;
@@ -35,12 +33,6 @@ async function generateUniqueBookingRefId(session) {
     return bookingRefIdGenerated;
 }
 
-/**
- * Creates a new booking with a 'PaymentPending' status.
- * This is the first step in the booking process before payment.
- * @route POST /api/bookings
- * @access Private (Authenticated Users)
- */
 exports.createBooking = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -181,11 +173,6 @@ exports.getMyBookings = async (req, res) => {
     }
 };
 
-/**
- * Get a specific booking by ID for the logged-in user or admin
- * @route GET /api/bookings/:id
- * @access Private
- */
 exports.getBookingById = async (req, res) => {
     const bookingIdentifier = req.params.id;
     const userId = req.user.id;
@@ -195,7 +182,7 @@ exports.getBookingById = async (req, res) => {
             : { bookingRefId: bookingIdentifier.toUpperCase() };
         
         const booking = await Booking.findOne(query)
-             .select('+qrCodeData') // Explicitly select the qrCodeData field
+             .select('+qrCodeData') 
              .populate({
                 path: 'showtime',
                 populate: [
@@ -218,11 +205,6 @@ exports.getBookingById = async (req, res) => {
     }
 };
 
-/**
- * Cancel a booking (by user)
- * @route PUT /api/bookings/:id/cancel
- * @access Private
- */
 exports.cancelBooking = async (req, res) => {
     const bookingId = req.params.id;
     const userId = req.user.id;
@@ -271,7 +253,6 @@ exports.cancelBooking = async (req, res) => {
             { new: true, session: session }
         );
 
-        // TODO: Handle promo code use count reversal if applicable
         await session.commitTransaction();
         res.status(200).json({ success: true, msg: 'Booking cancelled successfully', booking });
     } catch (err) {
@@ -283,11 +264,6 @@ exports.cancelBooking = async (req, res) => {
     }
 };
 
-/**
- * Cancels a 'PaymentPending' booking. Called when user closes payment modal.
- * @route PUT /api/bookings/:id/cancel-pending
- * @access Private (Owner of booking)
- */
 exports.cancelPendingBooking = async (req, res) => {
     const bookingId = req.params.id;
     const userId = req.user.id;
@@ -304,14 +280,11 @@ exports.cancelPendingBooking = async (req, res) => {
             return res.status(400).json({ msg: `Booking status is '${booking.status}', not 'PaymentPending'.` });
         }
 
-        // Release seats
         await Showtime.updateOne(
             { _id: booking.showtime },
             { $pullAll: { bookedSeats: booking.seats } },
             { session }
         );
-
-        // Update booking status to 'Cancelled' or 'PaymentFailed'
         booking.status = 'PaymentFailed';
         await booking.save({ session });
         
@@ -326,14 +299,8 @@ exports.cancelPendingBooking = async (req, res) => {
     }
 };
 
-
-/**
- * Validate a booking via QR code scan data
- * @route POST /api/scan/validate
- * @access Private (Admin or Organizer)
- */
 exports.validateBookingQR = async (req, res) => {
-    const { qrCodeData } = req.body; // Expect the full QR data string
+    const { qrCodeData } = req.body; 
     const staffUserId = req.user.id;
     
     let bookingDetails;
@@ -380,7 +347,6 @@ exports.validateBookingQR = async (req, res) => {
         booking.status = 'CheckedIn';
         await booking.save();
 
-        // Respond with the details from the QR code for confirmation on the scanner's screen
         res.status(200).json({
             success: true,
             message: 'Check-in Successful!',

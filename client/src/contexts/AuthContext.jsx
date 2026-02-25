@@ -3,7 +3,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import axios from 'axios';
 import { 
     loginUserApi, registerUserApi, getMeApi, googleLoginApi,
-    checkEmailApi, sendOtpApi, verifyOtpApi // Imported new functions
+    checkEmailApi, sendOtpApi, verifyOtpApi
 } from '../api/auth'; 
 
 const setAuthToken = (token) => {
@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }) => {
     const contextValue = {
         user, token, isAuthenticated, isLoading, authError, setAuthError,
         login, googleLogin, register, logout, loadUser,
-        checkEmail, sendOtp, verifyOtp // Exported new tools
+        checkEmail, sendOtp, verifyOtp 
     };
 
     return (

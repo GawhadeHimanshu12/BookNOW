@@ -7,7 +7,7 @@ const {
 const authMiddleware = require('../middleware/authMiddleware');
 const { isOrganizerOrAdmin } = require('../middleware/roleMiddleware');
 const { check, body, validationResult } = require('express-validator');
-const mongoose = require('mongoose'); // Needed for ObjectId.isValid
+const mongoose = require('mongoose'); 
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ const commonShowtimeValidation = [
 ];
 
 const createShowtimeValidation = [
-    check('movie') // Check movie/event logic via custom validation
+    check('movie') 
         .custom((value, { req }) => {
             const movie = req.body.movie;
             const event = req.body.event;
@@ -31,15 +31,14 @@ const createShowtimeValidation = [
             if (movie && !mongoose.Types.ObjectId.isValid(movie)) throw new Error('Movie ID must be a valid MongoDB ObjectId.');
             if (event && !mongoose.Types.ObjectId.isValid(event)) throw new Error('Event ID must be a valid MongoDB ObjectId.');
             return true;
-        }).optional(), // Make base check optional, custom logic handles presence
+        }).optional(),
     ...commonShowtimeValidation
 ];
 
 const updateShowtimeValidation = [
-    // For updates, most fields are optional but if provided, must be valid
     check('movie').optional().isMongoId().withMessage('Movie ID must be a valid MongoID.'),
     check('event').optional().isMongoId().withMessage('Event ID must be a valid MongoID.'),
-    check().custom((value, { req }) => { // Ensure not both if one is being updated to exist
+    check().custom((value, { req }) => { 
         if (req.body.movie && req.body.event) {
             throw new Error('Cannot link showtime to both a Movie and an Event during update.');
         }

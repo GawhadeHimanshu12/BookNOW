@@ -24,10 +24,9 @@ const UserDetailsPage = () => {
         setIsLoading(true);
         setError(null);
         try {
-            // Fetch user details and their bookings in parallel
             const [userData, bookingsData] = await Promise.all([
                 getUserByIdAdminApi(userId),
-                getAllBookingsAdminApi({ userId: userId, limit: 100 }) // Fetch up to 100 bookings for this user
+                getAllBookingsAdminApi({ userId: userId, limit: 100 }) 
             ]);
             
             setUser(userData);

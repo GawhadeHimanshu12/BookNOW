@@ -25,7 +25,6 @@ module.exports = async function(req, res, next) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // 4. SECURITY CHECK: Fetch user to ensure they still exist/aren't banned
-        // We select '-password' to keep the object clean
         const user = await User.findById(decoded.user.id).select('-password');
 
         if (!user) {

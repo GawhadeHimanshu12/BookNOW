@@ -1,5 +1,4 @@
 // server/controllers/organizerController.js
-// Purpose: Contains logic for API endpoints specific to the logged-in organizer.
 
 const Venue = require('../models/Venue');
 const Showtime = require('../models/Showtime');
@@ -9,34 +8,27 @@ const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const { validationResult } = require('express-validator');
 
-
-// @desc    Get dashboard stats for the logged-in organizer
-// @route   GET /api/organizer/dashboard
-// @access  Private (Approved Organizer Only)
 exports.getOrganizerDashboardStats = async (req, res) => {
     const organizerId = req.user.id;
     try {
         const venueCount = await Venue.countDocuments({ organizer: organizerId, isActive: true });
 
-        // Count upcoming showtimes for their venues
         const upcomingShowtimeCount = await Showtime.countDocuments({
-            venue: { $in: await Venue.find({ organizer: organizerId }).distinct('_id') }, // Find venues managed by organizer
-            startTime: { $gte: new Date() }, // Starting from now
+            venue: { $in: await Venue.find({ organizer: organizerId }).distinct('_id') }, 
+            startTime: { $gte: new Date() }, 
             isActive: true
         });
 
-        // Count total active showtimes
          const totalActiveShowtimeCount = await Showtime.countDocuments({
             venue: { $in: await Venue.find({ organizer: organizerId }).distinct('_id') },
             isActive: true
         });
 
-        // Count recent bookings (e.g., last 7 days) for their venues/showtimes
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         const recentBookingCount = await Booking.countDocuments({
             showtime: { $in: await Showtime.find({ venue: { $in: await Venue.find({ organizer: organizerId }).distinct('_id') }}).distinct('_id')},
             bookingTime: { $gte: sevenDaysAgo },
-            status: 'Confirmed' // Count only confirmed bookings
+            status: 'Confirmed' 
         });
 
 
@@ -54,9 +46,6 @@ exports.getOrganizerDashboardStats = async (req, res) => {
 };
 
 
-// @desc    Get all venues managed by the logged-in organizer
-// @route   GET /api/organizer/venues
-// @access  Private (Approved Organizer Only)
 exports.getMyVenues = async (req, res) => {
     const organizerId = req.user.id;
     try {
@@ -69,25 +58,19 @@ exports.getMyVenues = async (req, res) => {
     }
 };
 
-
-// @desc    Get showtimes for venues managed by the logged-in organizer (with filtering)
-// @route   GET /api/organizer/showtimes
-// @access  Private (Approved Organizer Only)
 exports.getMyShowtimes = async (req, res) => {
     const organizerId = req.user.id;
-    const { venueId, movieId, date, status } = req.query; // Allow filtering
+    const { venueId, movieId, date, status } = req.query; 
 
     try {
-        // 1. Get IDs of venues managed by this organizer
         const managedVenueIds = await Venue.find({ organizer: organizerId }).distinct('_id');
         if (managedVenueIds.length === 0) {
-             return res.status(200).json([]); // No venues, so no showtimes
+             return res.status(200).json([]); 
         }
 
-        // 2. Build query based on managed venues and filters
         const query = { venue: { $in: managedVenueIds } };
 
-        if (venueId) { // Filter by a specific venue (must be one they manage)
+        if (venueId) { 
              if (!managedVenueIds.some(id => id.equals(venueId))) {
                   return res.status(403).json({ msg: 'Access denied to this venue\'s showtimes' });
              }
@@ -108,13 +91,11 @@ exports.getMyShowtimes = async (req, res) => {
         }
         if (status === 'active') query.isActive = true;
         if (status === 'inactive') query.isActive = false;
-        // Default: show all (active/inactive) if status not specified, or add default like future shows only?
 
-        // 3. Fetch showtimes
         const showtimes = await Showtime.find(query)
             .populate('movie', 'title')
             .populate('venue', 'name')
-            .sort({ startTime: -1 }); // Sort by most recent start time
+            .sort({ startTime: -1 });
 
         res.status(200).json(showtimes);
 
@@ -124,21 +105,16 @@ exports.getMyShowtimes = async (req, res) => {
     }
 };
 
-
-// @desc    Get bookings for showtimes at venues managed by the logged-in organizer
-// @route   GET /api/organizer/bookings
-// @access  Private (Approved Organizer Only)
 exports.getMyVenueBookings = async (req, res) => {
      const organizerId = req.user.id;
-     const { showtimeId, date, status } = req.query; // Allow filtering
+     const { showtimeId, date, status } = req.query; 
 
      try {
-        // 1. Find showtime IDs linked to the organizer's venues
         const managedVenueIds = await Venue.find({ organizer: organizerId }).distinct('_id');
          if (managedVenueIds.length === 0) return res.status(200).json([]);
 
         const showtimeQuery = { venue: { $in: managedVenueIds } };
-        if (showtimeId) { // Filter by specific showtime (must be one they manage)
+        if (showtimeId) { 
             if (!mongoose.Types.ObjectId.isValid(showtimeId)) return res.status(400).json({ msg: 'Invalid Showtime ID' });
             const st = await Showtime.findById(showtimeId).select('venue');
             if (!st || !managedVenueIds.some(id => id.equals(st.venue))) {
@@ -146,19 +122,15 @@ exports.getMyVenueBookings = async (req, res) => {
             }
             showtimeQuery._id = showtimeId;
         }
-        // Add date filtering based on showtime's startTime if needed
 
         const relevantShowtimeIds = await Showtime.find(showtimeQuery).distinct('_id');
         if (relevantShowtimeIds.length === 0) return res.status(200).json([]);
 
-
-        // 2. Build booking query based on relevant showtimes and filters
         const bookingQuery = { showtime: { $in: relevantShowtimeIds } };
 
         if (status && ['Pending', 'Confirmed', 'Cancelled', 'CheckedIn'].includes(status)) {
             bookingQuery.status = status;
         }
-        // Add date filtering based on bookingTime if needed
          if (date) {
             try {
                 const startDate = new Date(`${date}T00:00:00.000Z`);
@@ -168,8 +140,6 @@ exports.getMyVenueBookings = async (req, res) => {
             } catch (e) { return res.status(400).json({ msg: 'Invalid date format (YYYY-MM-DD)'}); }
         }
 
-
-        // 3. Fetch bookings
         const bookings = await Booking.find(bookingQuery)
             .populate('user', 'name email')
             .populate({
@@ -190,9 +160,6 @@ exports.getMyVenueBookings = async (req, res) => {
     }
 };
 
-// @desc    Update the logged-in organizer's profile details
-// @route   PUT /api/organizer/profile
-// @access  Private (Approved Organizer Only)
 exports.updateMyProfile = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -200,13 +167,12 @@ exports.updateMyProfile = async (req, res) => {
     }
 
     const organizerId = req.user.id;
-    const { name, organizationName } = req.body; // Fields organizer can change
+    const { name, organizationName } = req.body; 
 
     try {
         const updateFields = {};
         if (name) updateFields.name = name;
         if (organizationName) updateFields.organizationName = organizationName;
-        // Do not allow changing email/role/approval status here
 
         if (Object.keys(updateFields).length === 0) {
              return res.status(400).json({ msg: 'No valid fields provided for update' });
@@ -215,12 +181,11 @@ exports.updateMyProfile = async (req, res) => {
         const updatedOrganizer = await User.findByIdAndUpdate(
             organizerId,
             { $set: updateFields },
-            { new: true, runValidators: true } // Return updated doc, run schema validation
-        ).select('-password -managedVenues'); // Exclude sensitive/large fields
+            { new: true, runValidators: true } 
+        ).select('-password -managedVenues'); 
 
 
         if (!updatedOrganizer) {
-            // Should not happen if middleware passed
             return res.status(404).json({ msg: 'Organizer not found' });
         }
 
@@ -231,10 +196,6 @@ exports.updateMyProfile = async (req, res) => {
         res.status(500).json({ msg: 'Server error' });
     }
 };
-
-// @desc    Get events for the logged-in organizer
-// @route   GET /api/organizer/events
-// @access  Private (Approved Organizer Only)
 exports.getMyEvents = async (req, res) => {
     const organizerId = req.user.id;
     try {

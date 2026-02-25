@@ -1,5 +1,4 @@
 // server/controllers/showtimeController.js
-// Purpose: Contains logic for handling showtime-related API requests.
 
 const Showtime = require('../models/Showtime');
 const Movie = require('../models/Movie');
@@ -8,7 +7,6 @@ const Event = require('../models/Event');
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 
-// Helper: Check if user can manage venue
 const checkVenueAccess = async (venueId, userId, userRole, session) => {
     const venueQuery = Venue.findById(venueId);
     if (session) venueQuery.session(session);
@@ -21,9 +19,6 @@ const checkVenueAccess = async (venueId, userId, userRole, session) => {
     return { authorized: false, error: 'User not authorized to manage this venue.', status: 403 };
 };
 
-// @desc    Get showtimes (filtered by movie, venue, date, etc.)
-// @route   GET /api/showtimes
-// @access  Public
 exports.getShowtimes = async (req, res) => {
     const { movieId, eventId, venueId, date, sort } = req.query;
     const query = { isActive: true };
@@ -43,7 +38,6 @@ exports.getShowtimes = async (req, res) => {
     }
 
     let sortOptions = { startTime: 1 };
-    // Add other sort options if needed
     if (sort === 'startTime_asc') sortOptions = { startTime: 1 };
 
     const page = parseInt(req.query.page, 10) || 1;
@@ -72,9 +66,6 @@ exports.getShowtimes = async (req, res) => {
     }
 };
 
-// @desc    Get a single showtime by ID
-// @route   GET /api/showtimes/:id
-// @access  Public
 exports.getShowtimeById = async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -95,9 +86,6 @@ exports.getShowtimeById = async (req, res) => {
     }
 };
 
-// @desc    Get seat map for a specific showtime
-// @route   GET /api/showtimes/:id/seatmap
-// @access  Public
 exports.getShowtimeSeatmap = async (req, res) => {
     const { id: showtimeId } = req.params;
     try {
@@ -141,9 +129,6 @@ exports.getShowtimeSeatmap = async (req, res) => {
     }
 };
 
-// @desc    Create a new showtime
-// @route   POST /api/showtimes
-// @access  Private (Admin or Organizer)
 exports.createShowtime = async (req, res) => {
     const { venue: venueId, screenId, startTime, priceTiers, movie: movieId, event: eventId, isActive } = req.body;
     const { id: userId, role: userRole } = req.user;
@@ -201,9 +186,6 @@ exports.createShowtime = async (req, res) => {
     }
 };
 
-// @desc    Update a showtime
-// @route   PUT /api/showtimes/:id
-// @access  Private (Admin or Organizer)
 exports.updateShowtime = async (req, res) => {
     const { priceTiers, isActive } = req.body;
     const { id: showtimeId } = req.params;
@@ -226,9 +208,6 @@ exports.updateShowtime = async (req, res) => {
     }
 };
 
-// @desc    Delete a showtime (soft delete)
-// @route   DELETE /api/showtimes/:id
-// @access  Private (Admin or Organizer)
 exports.deleteShowtime = async (req, res) => {
     const { id: showtimeId } = req.params;
     const { id: userId, role: userRole } = req.user;
@@ -242,8 +221,6 @@ exports.deleteShowtime = async (req, res) => {
         if (showtime.bookedSeats && showtime.bookedSeats.length > 0) {
             return res.status(400).json({ msg: 'Cannot delete showtime with existing bookings. Please deactivate it instead.' });
         }
-
-        // Soft delete by deactivating
         showtime.isActive = false;
         await showtime.save();
         res.status(200).json({ success: true, msg: 'Showtime has been deactivated.' });

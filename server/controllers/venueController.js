@@ -1,5 +1,4 @@
 // server/controllers/venueController.js
-// Purpose: Venue CRUD with strict organizer association.
 
 const Venue = require('../models/Venue');
 const User = require('../models/User');
@@ -7,21 +6,14 @@ const Showtime = require('../models/Showtime');
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
 
-// @desc    Get all active venues
-// @route   GET /api/venues
-// @access  Public
 exports.getVenues = async (req, res) => {
     try {
         const { city, status, page = 1, limit = 10 } = req.query;
         let query = {};
-
-        // Status Filter
         if (req.user?.role === 'admin') {
             if (status === 'active') query.isActive = true;
             else if (status === 'inactive') query.isActive = false;
-            // else 'all'
         } else {
-            // Public/Organizers only see active venues in the general list
             query.isActive = true;
         }
 
@@ -49,17 +41,12 @@ exports.getVenues = async (req, res) => {
     }
 };
 
-// @desc    Get Venue By ID
-// @route   GET /api/venues/:id
-// @access  Public (Conditional)
 exports.getVenueById = async (req, res) => {
     try {
         const venue = await Venue.findById(req.params.id)
             .populate('organizer', 'name organizationName');
 
         if (!venue) return res.status(404).json({ msg: 'Venue not found' });
-
-        // Access Rule: Active venues are public. Inactive are Owner/Admin only.
         if (!venue.isActive) {
             const isOwner = req.user && (venue.organizer._id.toString() === req.user.id);
             const isAdmin = req.user && req.user.role === 'admin';
@@ -75,9 +62,6 @@ exports.getVenueById = async (req, res) => {
     }
 };
 
-// @desc    Create Venue
-// @route   POST /api/venues
-// @access  Private (Approved Organizer/Admin)
 exports.createVenue = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -95,7 +79,7 @@ exports.createVenue = async (req, res) => {
             isActive: true
         }], { session });
 
-        // 2. Link Venue to Organizer User Profile (Critical Step)
+        // 2. Link Venue to Organizer User Profile 
         if (req.user.role === 'organizer') {
             await User.findByIdAndUpdate(organizerId, {
                 $addToSet: { managedVenues: venue._id }
@@ -114,9 +98,6 @@ exports.createVenue = async (req, res) => {
     }
 };
 
-// @desc    Update Venue
-// @route   PUT /api/venues/:id
-// @access  Private (Owner/Admin)
 exports.updateVenue = async (req, res) => {
     try {
         let venue = await Venue.findById(req.params.id);
@@ -139,9 +120,7 @@ exports.updateVenue = async (req, res) => {
     }
 };
 
-// @desc    Deactivate Venue (Soft Delete)
-// @route   DELETE /api/venues/:id
-// @access  Private (Owner/Admin)
+
 exports.deleteVenue = async (req, res) => {
     try {
         const venue = await Venue.findById(req.params.id);
@@ -151,7 +130,6 @@ exports.deleteVenue = async (req, res) => {
             return res.status(403).json({ msg: 'Not authorized' });
         }
 
-        // Safety Check: Are there active showtimes?
         const hasActiveShowtimes = await Showtime.exists({
             venue: venue._id,
             isActive: true,

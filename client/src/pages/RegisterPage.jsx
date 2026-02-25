@@ -18,7 +18,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Radio from '@mui/material/Radio';
 
 const RegisterPage = () => {
-    const [step, setStep] = useState(1); // 1: Details, 2: OTP
+    const [step, setStep] = useState(1); 
     const [formData, setFormData] = useState({
         name: '', email: '', password: '', confirmPassword: '',
         role: 'user', organizationName: ''
@@ -45,7 +45,6 @@ const RegisterPage = () => {
         setFormData({ ...formData, role: e.target.value });
     };
 
-    // Step 1: Submit Form & Send OTP
     const handleSubmit = async (e) => {
         e.preventDefault();
         setPageError(''); setAuthError(null);
@@ -73,11 +72,10 @@ const RegisterPage = () => {
 
         const result = await register(apiData);
         if (result && result.success) {
-            setStep(2); // Registration recorded, waiting for OTP validation
+            setStep(2);
         }
     };
 
-    // Step 2: Verify OTP
     const handleOtpSubmit = async () => {
         setPageError('');
         if (!otp) return setPageError("Please enter the OTP sent to your email.");

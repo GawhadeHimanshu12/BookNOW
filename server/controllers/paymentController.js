@@ -1,5 +1,4 @@
 // server/controllers/paymentController.js
-// Purpose: Razorpay payment logic
 
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
@@ -19,7 +18,6 @@ exports.createOrder = async (req, res) => {
 
         if (!booking) return res.status(404).json({ msg: 'Booking not found' });
         
-        // Ownership check using req.user._id (from new auth middleware)
         if (booking.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ msg: 'Unauthorized' });
         }
@@ -29,7 +27,7 @@ exports.createOrder = async (req, res) => {
         }
 
         const options = {
-            amount: Math.round(booking.totalAmount * 100), // paise
+            amount: Math.round(booking.totalAmount * 100),
             currency: "INR",
             receipt: booking.bookingRefId,
             notes: { bookingId: booking._id.toString() }
@@ -44,7 +42,7 @@ exports.createOrder = async (req, res) => {
             orderId: order.id,
             amount: order.amount,
             currency: order.currency,
-            key: process.env.RAZORPAY_KEY_ID // Send key to frontend convenience
+            key: process.env.RAZORPAY_KEY_ID 
         });
 
     } catch (err) {
@@ -67,7 +65,6 @@ exports.verifyPayment = async (req, res) => {
             return res.status(404).json({ msg: 'Booking not found' });
         }
 
-        // Idempotency: If already confirmed, just return success
         if (booking.status === 'Confirmed') {
             await session.abortTransaction();
             return res.status(200).json({ success: true, msg: 'Booking already confirmed.' });
@@ -91,8 +88,6 @@ exports.verifyPayment = async (req, res) => {
             res.status(200).json({ success: true, msg: 'Booking Confirmed!', bookingId: booking._id });
         } else {
             await session.abortTransaction();
-            // We don't save 'PaymentFailed' here immediately to allow user to retry 
-            // without losing the booking, or we can handle it in a separate cleanup job.
             return res.status(400).json({ success: false, msg: 'Invalid payment signature' });
         }
 

@@ -1,16 +1,12 @@
 // server/controllers/eventController.js
-// Purpose: Contains logic for handling event information API requests (CRUD).
-
 const Event = require('../models/Event');
-const Venue = require('../models/Venue'); // Needed for potential venue validation
+const Venue = require('../models/Venue'); 
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const User = require('../models/User'); 
 
-// --- Helper: Check if user can manage venue (if venue is linked) ---
-// Reusing helper logic concept from showtimeController
 const checkEventVenueAccess = async (venueId, userId, userRole) => {
-    if (!venueId) return { authorized: true }; // No specific venue linked, access granted based on role check
+    if (!venueId) return { authorized: true }; 
     if (!mongoose.Types.ObjectId.isValid(venueId)) return { authorized: false, error: 'Invalid Venue ID format', status: 400 };
 
     const venue = await Venue.findById(venueId);
@@ -22,9 +18,6 @@ const checkEventVenueAccess = async (venueId, userId, userRole) => {
     return { authorized: false, error: 'User not authorized for the linked venue', status: 403 };
 };
 
-// @desc    Get events for the logged-in organizer
-// @route   GET /api/organizer/events
-// @access  Private (Approved Organizer Only)
 exports.getMyEvents = async (req, res) => {
     const organizerId = req.user.id;
     try {
@@ -37,9 +30,6 @@ exports.getMyEvents = async (req, res) => {
 };
 
 
-// @desc    Get all events (with filtering and sorting)
-// @route   GET /api/events?city=Bhubaneswar&category=Music&status=upcoming&sort=startDate_asc&limit=10&page=1
-// @access  Public
 exports.getEvents = async (req, res) => {
     try {
         const query = {};
@@ -47,32 +37,26 @@ exports.getEvents = async (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // --- Filtering ---
-        // Status Filter
-        // if (status === 'upcoming' || !status) { // Default to upcoming
         if (status === 'upcoming' || !req.user) {
-             query.status = { $in: ['Scheduled'] }; // Only scheduled
-             query.startDate = { $gte: today }; // Starting today or later
+             query.status = { $in: ['Scheduled'] }; 
+             query.startDate = { $gte: today }; r
         } else if (status === 'past') {
-             // Could filter by status='Completed' OR (status='Scheduled' AND startDate < today)
-             query.startDate = { $lt: today }; // Started before today
-        } // else status === 'all', no date/status filter applied initially
+             query.startDate = { $lt: today }; 
+        } 
 
         if (category) query.category = { $regex: new RegExp(`^${category}$`, 'i') };
-        if (city) query['address.city'] = { $regex: new RegExp(city, 'i') }; // Use 'address.city'
-        if (tag) query.tags = { $regex: new RegExp(`^${tag}$`, 'i') }; // Match tag in array
+        if (city) query['address.city'] = { $regex: new RegExp(city, 'i') }; 
+        if (tag) query.tags = { $regex: new RegExp(`^${tag}$`, 'i') }; 
 
-        if (date) { // Filter events happening ON this specific date
+        if (date) { 
              try {
                 const startDate = new Date(`${date}T00:00:00.000Z`);
                 const endDate = new Date(startDate);
                 endDate.setUTCDate(startDate.getUTCDate() + 1);
-                 // Event should start before the end of the day AND end after the start of the day (if endDate exists)
-                 // Or simply start within the day if no endDate
-                query.$and = query.$and || []; // Ensure $and array exists
+                query.$and = query.$and || []; 
                 query.$and.push({ startDate: { $lt: endDate } });
                 query.$and.push({ $or: [ { endDate: { $gte: startDate } }, { endDate: { $exists: false } } ] });
-                // Remove the simpler startDate filter if date range is used
+
                 if(query.startDate?.$gte === today && status !== 'past') delete query.startDate;
 
 
@@ -80,45 +64,18 @@ exports.getEvents = async (req, res) => {
         }
 
         // --- Sorting ---
-        let sortOptions = { startDate: 1 }; // Default sort: Soonest first
+        let sortOptions = { startDate: 1 }; 
         if (sort) {
              switch (sort) {
                 case 'startDate_desc':
-                    sortOptions = { startDate: -1 }; // Furthest first
+                    sortOptions = { startDate: -1 }; 
                     break;
                  case 'title_asc':
                     sortOptions = { title: 1 };
                     break;
-                 // Add more if needed
              }
         }
 
-        // --- Pagination ---
-    //     const page = parseInt(req.query.page, 10) || 1;
-    //     const limit = parseInt(req.query.limit, 10) || 10;
-    //     const startIndex = (page - 1) * limit;
-    //     const endIndex = page * limit;
-    //     const total = await Event.countDocuments(query);
-
-    //     // Execute Query
-    //     const events = await Event.find(query)
-    //                              .populate('venue', 'name address.city')
-    //                              .sort(sortOptions)
-    //                              .skip(startIndex)
-    //                              .limit(limit)
-    //                              .select('-organizerInfo.__v'); // Example exclusion
-
-    //     // Pagination result
-    //     const pagination = {};
-    //     if (endIndex < total) pagination.next = { page: page + 1, limit };
-    //     if (startIndex > 0) pagination.prev = { page: page - 1, limit };
-
-    //     res.status(200).json({ success: true, count: events.length, total, pagination, data: events });
-
-    // } catch (err) {
-    //     console.error('Error fetching events:', err.message);
-    //     res.status(500).json({ msg: 'Server error' });
-    // }
 
     const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
@@ -141,9 +98,6 @@ exports.getEvents = async (req, res) => {
     }
 };
 
-// @desc    Get a single event by ID
-// @route   GET /api/events/:id
-// @access  Public
 exports.getEventById = async (req, res) => {
     const eventId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
@@ -152,9 +106,9 @@ exports.getEventById = async (req, res) => {
 
     try {
         const event = await Event.findById(eventId)
-                                 .populate('venue', 'name address facilities'); // Populate linked venue details
+                                 .populate('venue', 'name address facilities'); 
 
-        if (!event || event.status === 'Cancelled') { // Don't show cancelled events via direct ID lookup? Or show with status?
+        if (!event || event.status === 'Cancelled') { 
              return res.status(404).json({ msg: 'Event not found or has been cancelled' });
         }
 
@@ -165,10 +119,6 @@ exports.getEventById = async (req, res) => {
     }
 };
 
-
-// @desc    Create a new event
-// @route   POST /api/events
-// @access  Private (Admin or Approved Organizer)
 exports.createEvent = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -178,7 +128,6 @@ exports.createEvent = async (req, res) => {
     const { venue, ...eventData } = req.body;
 
     try {
-        // This check now works because 'User' is imported
         if (req.user.role === 'organizer') {
              const organizer = await User.findById(req.user.id).select('isApproved');
              if (!organizer?.isApproved) {
@@ -204,12 +153,6 @@ exports.createEvent = async (req, res) => {
     }
 };
 
-
-
-
-// @desc    Update an existing event
-// @route   PUT /api/events/:id
-// @access  Private (Admin or Owning Organizer - needs ownership logic)
 exports.updateEvent = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -219,7 +162,7 @@ exports.updateEvent = async (req, res) => {
     const eventId = req.params.id;
     const userId = req.user.id;
     const userRole = req.user.role;
-    const { venue, ...eventData } = req.body; // Separate venue if provided in update
+    const { venue, ...eventData } = req.body; 
 
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
         return res.status(400).json({ msg: 'Invalid Event ID format' });
@@ -231,28 +174,19 @@ exports.updateEvent = async (req, res) => {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
-        // --- Authorization Check ---
-        // 1. Check access to the *new* venue if venue is being changed
-        if (venue !== undefined) { // If venue field is present in request body
-             const access = await checkEventVenueAccess(venue || null, userId, userRole); // Allow null to unset venue
+        if (venue !== undefined) { 
+             const access = await checkEventVenueAccess(venue || null, userId, userRole);
              if (!access.authorized) {
                 return res.status(access.status).json({ msg: `Cannot update: ${access.error}` });
              }
         }
-        // 2. Check access based on the *original* venue OR if user is admin
         const originalVenueAccess = await checkEventVenueAccess(event.venue, userId, userRole);
         if (!originalVenueAccess.authorized && userRole !== 'admin') {
-            // If user isn't admin and isn't authorized for the original venue (if any)
              return res.status(403).json({ msg: 'User not authorized to update this event (based on original venue)' });
         }
-        // More refined logic might be needed: Maybe only allow updating non-venue fields if not owner/admin?
-        // Or link event directly to `addedBy` user for ownership checks if no venue.
 
-
-        // Perform the update
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
-             // Update eventData and handle venue separately
             { $set: { ...eventData, venue: venue } },
             { new: true, runValidators: true }
         ).populate('venue', 'name address.city');
@@ -268,9 +202,6 @@ exports.updateEvent = async (req, res) => {
     }
 };
 
-// @desc    Delete an event
-// @route   DELETE /api/events/:id
-// @access  Private (Admin or Owning Organizer)
 exports.deleteEvent = async (req, res) => {
     const eventId = req.params.id;
     const userId = req.user.id;
@@ -286,13 +217,10 @@ exports.deleteEvent = async (req, res) => {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
-        // --- Authorization Check --- (Similar to update)
          const venueAccess = await checkEventVenueAccess(event.venue, userId, userRole);
         if (!venueAccess.authorized && userRole !== 'admin') {
              return res.status(403).json({ msg: 'User not authorized to delete this event' });
         }
-
-        // TODO: Add dependency checks? Are there bookings linked to this event (if implementing event booking)?
 
         await event.remove();
         res.status(200).json({ success: true, msg: 'Event deleted successfully' });

@@ -1,5 +1,4 @@
 // server/routes/authRoutes.js
-// Purpose: Defines the API routes related to authentication (register, login, get profile).
 
 const express = require('express');
 const passport = require('passport');
@@ -10,9 +9,9 @@ const {
     forgotPassword,
     resetPassword,
     googleCallback,
-    checkEmail,           // OTP function
-    sendLoginOtp,         // OTP function
-    verifyOtpAndLogin     // OTP function
+    checkEmail,           
+    sendLoginOtp,         
+    verifyOtpAndLogin     
 } = require('../controllers/authController');
 const { check } = require('express-validator'); 
 const authMiddleware = require('../middleware/authMiddleware'); 
@@ -20,7 +19,6 @@ const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // --- Validation Rules ---
-// FIX: Added { gmail_remove_dots: false } to all normalizeEmail() calls
 const registerValidationRules = [
     check('name', 'Name is required').not().isEmpty().trim().escape(),
     check('email', 'Please include a valid email').isEmail().normalizeEmail({ gmail_remove_dots: false }),
@@ -45,13 +43,10 @@ const resetPasswordValidation = [
 ];
 
 // --- Route Definitions ---
-
-// NEW OTP ROUTES
 router.post('/check-email', checkEmail);
 router.post('/send-otp', sendLoginOtp);
 router.post('/verify-otp', verifyOtpAndLogin);
 
-// Existing Routes
 router.post('/register', registerValidationRules, registerUser);
 router.post('/login', loginValidationRules, loginUser);
 router.get('/me', authMiddleware, getMe); 

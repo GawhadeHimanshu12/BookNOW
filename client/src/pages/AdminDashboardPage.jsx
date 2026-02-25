@@ -15,9 +15,8 @@ import TheatersIcon from '@mui/icons-material/Theaters';
 import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import ReportProblemIcon from '@mui/icons-material/ReportProblem'; // New Icon
+import ReportProblemIcon from '@mui/icons-material/ReportProblem'; 
 
-// Import the management components
 import UserManagement from '../components/admin/UserManagement';
 import PromoCodeManagement from '../components/admin/PromoCodeManagement';
 import CityManagement from '../components/admin/CityManagement';
@@ -62,8 +61,8 @@ const tabNameToIndex = {
     venues: 4,
     events: 5,
     bookings: 6,
-    reports: 7, // New Tab
-    statistics: 8, // Index shifted
+    reports: 7,
+    statistics: 8, 
 };
 
 const AdminDashboardPage = () => {

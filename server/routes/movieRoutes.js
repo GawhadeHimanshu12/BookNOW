@@ -6,7 +6,7 @@ const {
     createMovie,
     updateMovie,
     deleteMovie,
-    checkReviewEligibility // Import new controller
+    checkReviewEligibility 
 } = require('../controllers/movieController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { isAdmin, isOrganizerOrAdmin } = require('../middleware/roleMiddleware');
@@ -35,7 +35,6 @@ router.post('/', authMiddleware, isOrganizerOrAdmin, movieValidationRules, creat
 router.put('/:id', authMiddleware, isOrganizerOrAdmin, movieValidationRules, updateMovie);
 router.delete('/:id', authMiddleware, isAdmin, deleteMovie);
 
-// New Protected Route for Review Eligibility
 router.get('/:id/review-eligibility', authMiddleware, checkReviewEligibility);
 
 module.exports = router;

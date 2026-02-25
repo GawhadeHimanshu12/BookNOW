@@ -14,7 +14,7 @@ import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 
 const LoginPage = () => {
-    const [step, setStep] = useState(1); // 1: Email, 2: Select Pwd/OTP, 3: Enter OTP
+    const [step, setStep] = useState(1);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [otp, setOtp] = useState('');
@@ -35,28 +35,25 @@ const LoginPage = () => {
         
         const result = await checkEmail(email);
         if (result && result.exists) {
-            setStep(2); // Move to password/OTP choice
+            setStep(2); 
         } else if (result && !result.exists) {
             setAuthError("Email not found. Please register to create an account.");
         }
     };
 
-    // Step 2: Login with Password
     const handlePasswordLogin = async () => {
         if (!password) return setAuthError("Password is required");
         const success = await login({ email, password });
         if (success) navigate('/');
     };
 
-    // Step 2: Request OTP
     const handleRequestOtp = async () => {
         const success = await sendOtp(email);
         if (success) {
-            setStep(3); // Move to OTP input
+            setStep(3); 
         }
     };
 
-    // Step 3: Verify OTP
     const handleOtpVerify = async () => {
         if (!otp) return setAuthError("Please enter the OTP.");
         const result = await verifyOtp(email, otp);
@@ -71,16 +68,12 @@ const LoginPage = () => {
                 <Typography component="h1" variant="h5" gutterBottom>
                     {step === 3 ? 'Verify OTP' : 'Login'}
                 </Typography>
-
-                {/* SES Sandbox Notice */}
                 <Alert severity="warning" sx={{ mb: 3, fontSize: '0.75rem', py: 0 }}>
                     <strong>Note:</strong> AWS SES is in Sandbox mode. OTPs will only be sent to verified email addresses. Alternatively, use Password or Google Sign In.
                 </Alert>
 
                 <Box component="form" noValidate sx={{ mt: 1, width: '100%' }}>
                     {authError && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{authError}</Alert>}
-
-                    {/* STEP 1: Email Input */}
                     <TextField
                         margin="normal" required fullWidth id="email" label="Email Address" name="email"
                         autoComplete="email" autoFocus={step === 1} value={email} onChange={(e) => setEmail(e.target.value)}
@@ -101,7 +94,6 @@ const LoginPage = () => {
                         </>
                     )}
 
-                    {/* STEP 2: Choose Password or OTP */}
                     {step === 2 && (
                         <>
                             <TextField
@@ -131,8 +123,6 @@ const LoginPage = () => {
                             </Button>
                         </>
                     )}
-
-                    {/* STEP 3: OTP Input */}
                     {step === 3 && (
                         <>
                             <TextField

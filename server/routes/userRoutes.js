@@ -1,4 +1,3 @@
-
 // server/routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
@@ -22,25 +21,14 @@ const passwordUpdateValidation = [
 ];
 
 // --- Routes ---
-
-// @route   GET /api/users/profile
-// @desc    Get current user's profile
-// @access  Private
 router.get('/profile', authMiddleware, getUserProfile);
-
-// @route   PUT /api/users/profile
-// @desc    Update profile details (Name, Email)
-// @access  Private
 router.put(
     '/profile',
     authMiddleware,
     profileUpdateValidation,
-    updateUserProfile // FIXED: Matches the export in userController.js
+    updateUserProfile 
 );
 
-// @route   PUT /api/users/update-password
-// @desc    Update password
-// @access  Private
 router.put(
     '/update-password',
     authMiddleware,

@@ -1,34 +1,40 @@
-// server/utils/autoSeeder.js
 const cron = require('node-cron');
 const axios = require('axios');
 const mongoose = require('mongoose');
 
-// Models
 const User = require('../models/User');
 const Venue = require('../models/Venue');
 const Movie = require('../models/Movie');
 const Event = require('../models/Event');
 const Showtime = require('../models/Showtime');
-const Review = require('../models/Review'); // Added Review Model
+const Review = require('../models/Review');
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL;
+const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD;
+const DEFAULT_ADMIN_NAME = process.env.DEFAULT_ADMIN_NAME;
+const DEFAULT_USER_PASSWORD = process.env.SEED_USER_PASSWORD || 'TempUser@123';
 
-// 1. Helper to find or create an Admin user
 async function getAdminUser() {
-    let admin = await User.findOne({ email: 'admin@booknow.com' });
+    if (!DEFAULT_ADMIN_EMAIL || !DEFAULT_ADMIN_PASSWORD || !DEFAULT_ADMIN_NAME) {
+        throw new Error('Missing admin environment variables');
+    }
+
+    let admin = await User.findOne({ email: DEFAULT_ADMIN_EMAIL });
+
     if (!admin) {
         admin = await User.create({
-            name: 'System Admin',
-            email: 'admin@booknow.com',
-            password: 'password123', 
+            name: DEFAULT_ADMIN_NAME,
+            email: DEFAULT_ADMIN_EMAIL,
+            password: DEFAULT_ADMIN_PASSWORD,
             role: 'admin',
             isEmailVerified: true
         });
     }
+
     return admin._id;
 }
 
-// 2. Helper to find or create mock Reviewers (Users)
 async function getMockReviewUsers() {
     const reviewers = [
         { name: 'Rahul Sharma', email: 'rahul.s@example.com' },
@@ -39,24 +45,26 @@ async function getMockReviewUsers() {
     ];
 
     const savedReviewers = [];
+
     for (const reviewer of reviewers) {
         let user = await User.findOne({ email: reviewer.email });
         if (!user) {
             user = await User.create({
                 ...reviewer,
-                password: 'password123',
+                password: DEFAULT_USER_PASSWORD,
                 role: 'user',
                 isEmailVerified: true
             });
         }
         savedReviewers.push(user);
     }
+
     return savedReviewers;
 }
 
-// 3. Helper to find or create mock Venues
 async function getMockVenues(adminId) {
     let venues = await Venue.find();
+
     if (venues.length === 0) {
         const mockScreen = {
             name: 'Screen 1',
@@ -84,28 +92,26 @@ async function getMockVenues(adminId) {
             screens: [mockScreen],
             organizer: adminId
         });
+
         venues = [venue1, venue2];
     }
+
     return venues;
 }
 
-// 4. Helper to Fetch Indian Movies from TMDB
 async function fetchMovies(adminId) {
     if (!TMDB_API_KEY) {
-        console.log("⚠️ TMDB_API_KEY not found in .env. Skipping movie fetching.");
         return [];
     }
 
-    console.log("🎬 Fetching real Indian movies from TMDB...");
     try {
         const listRes = await axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_origin_country=IN&sort_by=popularity.desc&primary_release_date.gte=2023-01-01`);
-        const topMovies = listRes.data.results.slice(0, 10); // Take top 10
-
+        const topMovies = listRes.data.results.slice(0, 10);
         const savedMovies = [];
 
         for (const tmdbMovie of topMovies) {
-            let movie = await Movie.findOne({ title: tmdbMovie.title });
-            
+            let movie = await Movie.findOne({ tmdbId: tmdbMovie.id });
+
             if (!movie) {
                 const detailRes = await axios.get(`https://api.themoviedb.org/3/movie/${tmdbMovie.id}?api_key=${TMDB_API_KEY}&append_to_response=credits,videos`);
                 const details = detailRes.data;
@@ -117,33 +123,33 @@ async function fetchMovies(adminId) {
                 const crew = details.credits.crew.filter(c => c.job === 'Director').map(c => c.name);
 
                 movie = await Movie.create({
+                    tmdbId: details.id,
                     title: details.title,
                     description: details.overview || 'No description available.',
                     releaseDate: details.release_date || new Date(),
                     duration: details.runtime || 120,
                     movieLanguage: details.original_language === 'hi' ? 'Hindi' : (details.original_language === 'te' ? 'Telugu' : 'Indian'),
                     genre: details.genres.map(g => g.name) || ['Drama'],
-                    cast: cast,
-                    crew: crew,
+                    cast,
+                    crew,
                     posterUrl: details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : '',
-                    trailerUrl: trailerUrl,
+                    trailerUrl,
                     censorRating: 'U/A',
                     format: ['2D'],
                     addedBy: adminId
                 });
             }
+
             savedMovies.push(movie);
         }
+
         return savedMovies;
-    } catch (error) {
-        console.error("❌ Error fetching from TMDB:", error.message);
+    } catch {
         return [];
     }
 }
 
-// 5. Helper to Generate Mock Reviews
 async function generateMockReviews(movies, reviewUsers) {
-    console.log("⭐ Generating mock reviews and ratings for movies...");
     const sampleComments = [
         "Absolutely amazing! The cinematography was stunning.",
         "A bit slow in the first half, but the climax was totally worth it.",
@@ -155,42 +161,35 @@ async function generateMockReviews(movies, reviewUsers) {
     ];
 
     for (const movie of movies) {
-        // Only seed reviews if the movie has 0 reviews to prevent duplicating every day
         const existingReviews = await Review.countDocuments({ movie: movie._id });
-        
+
         if (existingReviews === 0) {
-            // Pick a random number of reviews (between 2 and 5) for this movie
-            const numReviews = Math.floor(Math.random() * 4) + 2; 
-            
-            // Shuffle the reviewers array so different users review different movies
-            const shuffledUsers = reviewUsers.sort(() => 0.5 - Math.random());
+            const numReviews = Math.floor(Math.random() * 4) + 2;
+            const shuffledUsers = [...reviewUsers].sort(() => 0.5 - Math.random());
             const selectedUsers = shuffledUsers.slice(0, numReviews);
 
             for (const user of selectedUsers) {
-                // Generate a random rating biased towards 3, 4, and 5
-                const rating = Math.floor(Math.random() * 3) + 3; // Random number between 3 and 5
+                const rating = Math.floor(Math.random() * 3) + 3;
                 const comment = sampleComments[Math.floor(Math.random() * sampleComments.length)];
 
-                // Use .create() so the `post('save')` hook fires and updates Movie averageRating
                 await Review.create({
-                    rating: rating,
-                    comment: comment,
+                    rating,
+                    comment,
                     user: user._id,
                     movie: movie._id
                 });
             }
         }
     }
-    console.log("✅ Reviews and ratings updated successfully!");
 }
 
-// 6. Helper to Generate Mock Events
 async function generateMockEvents(adminId, venues) {
     const eventTitles = ['Zakir Khan Live', 'Abhishek Upmanyu: Toxic', 'Bassjackers India Tour', 'Sunburn Arena'];
     const savedEvents = [];
 
     for (let i = 0; i < eventTitles.length; i++) {
         let event = await Event.findOne({ title: eventTitles[i] });
+
         if (!event) {
             event = await Event.create({
                 title: eventTitles[i],
@@ -199,24 +198,24 @@ async function generateMockEvents(adminId, venues) {
                 eventLanguage: 'Hindi/English',
                 venue: venues[i % venues.length]._id,
                 address: venues[i % venues.length].address,
-                startDate: new Date(Date.now() + (Math.random() * 10) * 24 * 60 * 60 * 1000), 
+                startDate: new Date(Date.now() + (Math.random() * 10) * 24 * 60 * 60 * 1000),
                 imageUrl: 'https://images.unsplash.com/photo-1585699324551-f6c309eedeca?q=80&w=1000',
                 tags: ['Live', 'Trending'],
                 status: 'Scheduled',
                 organizer: adminId
             });
         }
+
         savedEvents.push(event);
     }
+
     return savedEvents;
 }
 
-// 7. Generate Showtimes for the next 14 days
 async function generateShowtimes(movies, events, venues) {
-    console.log("🕒 Generating Showtimes for next 14 days...");
-    
-    // Clean up past showtimes to save DB space
-    await Showtime.deleteMany({ startTime: { $lt: new Date() } });
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    await Showtime.deleteMany({ startTime: { $lt: todayStart } });
 
     const today = new Date();
     const priceTiers = [
@@ -225,18 +224,20 @@ async function generateShowtimes(movies, events, venues) {
     ];
 
     for (let i = 0; i < 14; i++) {
-        // Create a date for 'today + i days'
         const targetDate = new Date();
         targetDate.setDate(today.getDate() + i);
-        targetDate.setHours(18, 0, 0, 0); // 6:00 PM
+        targetDate.setHours(18, 0, 0, 0);
 
-        // Schedule movies
         for (const movie of movies) {
             const venue = venues[Math.floor(Math.random() * venues.length)];
-            const screen = venue.screens[0]; 
+            const screen = venue.screens[0];
 
-            const existing = await Showtime.findOne({ movie: movie._id, venue: venue._id, startTime: targetDate });
-            
+            const existing = await Showtime.findOne({
+                movie: movie._id,
+                venue: venue._id,
+                startTime: targetDate
+            });
+
             if (!existing) {
                 await Showtime.create({
                     movie: movie._id,
@@ -246,46 +247,35 @@ async function generateShowtimes(movies, events, venues) {
                     startTime: targetDate,
                     endTime: new Date(targetDate.getTime() + movie.duration * 60000),
                     totalSeats: screen.capacity,
-                    priceTiers: priceTiers,
+                    priceTiers,
                     isActive: true
                 });
             }
         }
     }
-    console.log("✅ Showtimes scheduled successfully!");
 }
 
-// MAIN EXECUTION FUNCTION
 const runAutoSeeder = async () => {
-    try {
-        console.log("-----------------------------------------");
-        console.log("🔄 Running Automated Seeder Task...");
-        const adminId = await getAdminUser();
-        const reviewUsers = await getMockReviewUsers(); // Create fake users for reviews
-        const venues = await getMockVenues(adminId);
-        
-        const movies = await fetchMovies(adminId);
-        if (movies.length > 0) {
-            await generateMockReviews(movies, reviewUsers); // Generate reviews!
-        }
+    if (process.env.NODE_ENV === 'production' && !process.env.ENABLE_AUTO_SEED) {
+        return;
+    }
 
-        const events = await generateMockEvents(adminId, venues);
-        
-        if (movies.length > 0 || events.length > 0) {
-            await generateShowtimes(movies, events, venues);
-        }
-        
-        console.log("✅ Auto Seeder Task Completed.");
-        console.log("-----------------------------------------");
-    } catch (err) {
-        console.error("❌ Auto Seeder Failed:", err);
+    const adminId = await getAdminUser();
+    const reviewUsers = await getMockReviewUsers();
+    const venues = await getMockVenues(adminId);
+
+    const movies = await fetchMovies(adminId);
+    if (movies.length > 0) {
+        await generateMockReviews(movies, reviewUsers);
+    }
+
+    const events = await generateMockEvents(adminId, venues);
+
+    if (movies.length > 0 || events.length > 0) {
+        await generateShowtimes(movies, events, venues);
     }
 };
 
-// --- SCHEDULE THE CRON JOB ---
-// This runs every day at 00:00 (Midnight)
-cron.schedule('0 0 * * *', () => {
-    runAutoSeeder();
-});
+cron.schedule('0 0 * * *', runAutoSeeder, { timezone: 'Asia/Kolkata' });
 
 module.exports = runAutoSeeder;

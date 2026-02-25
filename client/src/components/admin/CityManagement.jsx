@@ -51,7 +51,7 @@ const CityManagement = () => {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setError(null); // Clear modal error
+        setError(null); 
     };
 
     const handleChange = (e) => {
@@ -62,7 +62,7 @@ const CityManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
-        const { _id, createdAt, __v, ...payload } = currentCity; // Exclude non-payload fields
+        const { _id, createdAt, __v, ...payload } = currentCity; 
 
         try {
             if (isEditing) {

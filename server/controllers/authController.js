@@ -1,8 +1,7 @@
 // server/controllers/authController.js
-// Purpose: Contains the logic for handling authentication-related requests.
 
 const User = require('../models/User');
-const Otp = require('../models/Otp'); // Added OTP Model
+const Otp = require('../models/Otp'); 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -95,7 +94,6 @@ exports.sendLoginOtp = async (req, res) => {
         if (!user) return res.status(404).json({ msg: 'User not found' });
 
         const otp = generateNumericOTP();
-        // Remove existing OTPs for this email to prevent clutter
         await Otp.deleteMany({ email: email.toLowerCase() });
         await Otp.create({ email: email.toLowerCase(), otp });
 
@@ -117,7 +115,6 @@ exports.sendLoginOtp = async (req, res) => {
 exports.verifyOtpAndLogin = async (req, res) => {
     const { email, otp } = req.body;
     try {
-        // Find OTP
         const validOtp = await Otp.findOne({ email: email.toLowerCase(), otp });
         if (!validOtp) {
             return res.status(400).json({ errors: [{ msg: 'Invalid or expired OTP' }] });
@@ -126,13 +123,11 @@ exports.verifyOtpAndLogin = async (req, res) => {
         const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) return res.status(404).json({ msg: 'User not found' });
 
-        // Mark verified if not already
         if (!user.isEmailVerified) {
             user.isEmailVerified = true;
             await user.save();
         }
 
-        // Delete used OTP
         await Otp.deleteOne({ _id: validOtp._id });
 
         if (user.role === 'organizer' && !user.isApproved) {
@@ -146,7 +141,6 @@ exports.verifyOtpAndLogin = async (req, res) => {
         res.status(500).json({ msg: 'Server Error' });
     }
 };
-
 
 // --- Login User Controller (Password) ---
 exports.loginUser = async (req, res) => {

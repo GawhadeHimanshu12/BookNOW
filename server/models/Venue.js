@@ -1,12 +1,9 @@
 // server/models/Venue.js
-// Purpose: Defines the schema for the Venue collection, including embedded screens.
 
 const mongoose = require('mongoose');
 
-// Shared Enum for Seat Types (Must match Showtime model)
 const SEAT_TYPES = ['Normal', 'VIP', 'Premium', 'Recliner', 'Wheelchair', 'Luxury', 'Unavailable'];
 
-// Schema for individual screens within a venue
 const ScreenSchema = new mongoose.Schema({
     name: { 
         type: String,
@@ -40,15 +37,12 @@ const ScreenSchema = new mongoose.Schema({
     }
 });
 
-// Validator: Ensure Row IDs are unique per screen
 ScreenSchema.path('seatLayout.rows').validate(function(rows) {
     if (!rows) return true;
     const rowIds = rows.map(r => r.rowId);
     return new Set(rowIds).size === rowIds.length;
 }, 'Row IDs must be unique within a screen.');
 
-
-// Main schema for the Venue
 const VenueSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -81,9 +75,6 @@ const VenueSchema = new mongoose.Schema({
         default: Date.now
     }
 });
-
-// Middleware to ensure organizer exists (Optional, depends on preference vs Controller logic)
-// Removed empty pre-save hook to keep code clean.
 
 VenueSchema.index({ name: 'text', 'address.city': 'text', 'address.state': 'text' });
 

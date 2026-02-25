@@ -6,12 +6,9 @@ import PersonIcon from '@mui/icons-material/Person';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 
-// Import the new section components
 import ProfileSection from '../components/user/ProfileSection';
 import MyBookingsSection from '../components/user/MyBookingsSection';
 import MyReviewsSection from '../components/user/MyReviewsSection';
-
-// TabPanel helper component
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
     return (

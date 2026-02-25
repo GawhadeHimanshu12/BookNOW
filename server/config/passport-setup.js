@@ -22,7 +22,7 @@ passport.use(
                 email: profile.emails[0].value,
                 googleId: profile.id,
                 isApproved: true,
-                isEmailVerified: true // Google users are auto-verified
+                isEmailVerified: true 
             }).save();
             done(null, newUser);
         } catch (err) {

@@ -1,5 +1,4 @@
 // server/models/Booking.js
-// Purpose: Defines the schema for the Booking collection.
 
 const mongoose = require('mongoose');
 
@@ -24,7 +23,7 @@ const BookingSchema = new mongoose.Schema({
         index: true
     },
     seats: {
-        type: [String], // e.g., ["A1", "C5"]
+        type: [String],
         required: [true, 'At least one seat must be selected'],
         validate: [
             {
@@ -35,7 +34,6 @@ const BookingSchema = new mongoose.Schema({
             },
             {
                 validator: function(seats) {
-                    // Prevent duplicates in the SAME booking request
                     return new Set(seats).size === seats.length;
                 },
                 message: 'Duplicate seats detected in booking.'
@@ -90,10 +88,8 @@ const BookingSchema = new mongoose.Schema({
     }
 });
 
-// Index for finding user's bookings (Most common query)
 BookingSchema.index({ user: 1, bookingTime: -1 });
 
-// Indexes for Payment Reconciliation
 BookingSchema.index({ razorpayOrderId: 1 });
 BookingSchema.index({ razorpayPaymentId: 1 });
 

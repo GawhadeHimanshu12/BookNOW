@@ -1,7 +1,7 @@
 // client/src/components/ReviewForm.jsx
 import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Rating, CircularProgress, Alert } from '@mui/material';
-import { createReviewApi } from '../api/reviews'; // Import the API function
+import { createReviewApi } from '../api/reviews'; 
 
 const ReviewForm = ({ movieId, onSubmitSuccess }) => {
     const [rating, setRating] = useState(0);
@@ -20,20 +20,15 @@ const ReviewForm = ({ movieId, onSubmitSuccess }) => {
         setError(null);
 
         try {
-            // Make the actual API call to create the review
             const newReview = await createReviewApi(movieId, { rating, comment });
             
-            // Call the callback function passed from the parent to notify of success
             if (onSubmitSuccess) {
                 onSubmitSuccess(newReview);
             }
-
-            // Reset form on success
             setRating(0);
             setComment('');
 
         } catch (err) {
-            // Display the error message from the API response
             setError(err.msg || err.message || 'Failed to submit review.');
         } finally {
             setIsLoading(false);
@@ -53,7 +48,7 @@ const ReviewForm = ({ movieId, onSubmitSuccess }) => {
                     precision={0.5}
                     onChange={(event, newValue) => {
                         setRating(newValue || 0);
-                        setError(null); // Clear error when rating is given
+                        setError(null); 
                     }}
                 />
             </Box>

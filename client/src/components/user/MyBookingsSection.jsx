@@ -10,7 +10,6 @@ import {
     DialogContent, DialogContentText, DialogTitle, Tabs, Tab
 } from '@mui/material';
 
-// Helper component for tab content
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
     return (
@@ -58,7 +57,6 @@ const BookingItem = ({ booking, onCancelClick }) => {
     if (booking.status === 'Confirmed' && isShowtimeInPast) {
         statusLabel = 'Completed';
     } else if (booking.status === 'PaymentPending' && isShowtimeInPast) {
-        // Visually represent this as failed in the UI if it ends up in the failed tab
         statusLabel = 'Payment Failed';
     }
 
@@ -122,13 +120,10 @@ const MyBookingsSection = () => {
                 if (booking.status === 'Cancelled' || booking.status === 'PaymentFailed') {
                     failed.push(booking);
                 } else if (booking.status === 'PaymentPending' && isShowtimeInPast) {
-                    // Treat pending payments for past shows as failed
                     failed.push(booking);
                 } else if (isShowtimeInPast) {
-                    // Includes 'Confirmed' and 'CheckedIn' for past shows
                     past.push(booking);
                 } else {
-                    // Includes 'Confirmed' and 'PaymentPending' for future shows
                     upcoming.push(booking);
                 }
             });
@@ -163,7 +158,7 @@ const MyBookingsSection = () => {
         if (!bookingToCancel) return;
         try {
             await cancelBookingApi(bookingToCancel._id);
-            fetchAndCategorizeBookings(); // Refetch and re-categorize all bookings
+            fetchAndCategorizeBookings(); 
         } catch (err) {
             alert(`Cancellation failed: ${err.msg || err.message}`);
         } finally {

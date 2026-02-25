@@ -35,8 +35,8 @@ const eventStatuses = ['Scheduled', 'Postponed', 'Cancelled', 'Completed'];
 const EventManagement = ({ initialStatusFilter = '' }) => {
     const [events, setEvents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null); // For modal errors
-    const [listError, setListError] = useState(null); // For list fetching errors
+    const [error, setError] = useState(null); 
+    const [listError, setListError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentEvent, setCurrentEvent] = useState(initialEventData);
     const [isEditing, setIsEditing] = useState(false);
@@ -51,15 +51,10 @@ const EventManagement = ({ initialStatusFilter = '' }) => {
     const [filters, setFilters] = useState({
         category: '',
         city: '',
-        status: initialStatusFilter, // Use prop for initial status
-        date: null, // For startDate
+        status: initialStatusFilter,
+        date: null, 
     });
     const [showFilters, setShowFilters] = useState(false);
-    // We'll need a list of venues if we want to link events to venues via a dropdown
-    // const [venues, setVenues] = useState([]); 
-    // useEffect(() => { /* fetch venues for dropdown */ }, []);
-
-
     const fetchEvents = useCallback(async (currentPage, currentRowsPerPage, currentFilters) => {
         setIsLoading(true);
         setListError(null);
@@ -67,12 +62,12 @@ const EventManagement = ({ initialStatusFilter = '' }) => {
             const params = {
                 limit: currentRowsPerPage,
                 page: currentPage + 1,
-                sort: 'startDate_desc', // Show newest start dates first or upcoming
+                sort: 'startDate_desc',
             };
             if (currentFilters.category) params.category = currentFilters.category;
-            if (currentFilters.city) params.city = currentFilters.city; // Backend filters on address.city
+            if (currentFilters.city) params.city = currentFilters.city; 
             if (currentFilters.status) params.status = currentFilters.status;
-            else params.status = 'all'; // Admin should see all by default if no filter
+            else params.status = 'all'; 
             
             if (currentFilters.date) params.date = dayjs(currentFilters.date).format('YYYY-MM-DD');
 
@@ -89,7 +84,6 @@ const EventManagement = ({ initialStatusFilter = '' }) => {
     }, []);
     
     useEffect(() => {
-        // Update filters if initial prop changes (e.g. from stats page link)
         setFilters(prev => ({...prev, status: initialStatusFilter || ''}));
     }, [initialStatusFilter]);
 
@@ -109,7 +103,7 @@ const EventManagement = ({ initialStatusFilter = '' }) => {
                 tags: Array.isArray(event.tags) ? event.tags : [],
                 address: event.address || initialEventData.address,
                 organizerInfo: event.organizerInfo || initialEventData.organizerInfo,
-                venue: event.venue?._id || event.venue || '', // Store only ID if venue is populated
+                venue: event.venue?._id || event.venue || '', 
             });
         } else {
             setIsEditing(false);
@@ -155,9 +149,8 @@ const EventManagement = ({ initialStatusFilter = '' }) => {
             ...currentEvent,
             startDate: currentEvent.startDate ? currentEvent.startDate.toISOString() : null,
             endDate: currentEvent.endDate ? currentEvent.endDate.toISOString() : null,
-            venue: currentEvent.venue || null, // Ensure it's null if empty string
+            venue: currentEvent.venue || null, 
         };
-        // Basic client-side validation
         if (!eventDataToSubmit.title || !eventDataToSubmit.category || !eventDataToSubmit.startDate) {
             setError("Title, Category, and Start Date are required.");
             return;
@@ -202,8 +195,7 @@ const EventManagement = ({ initialStatusFilter = '' }) => {
         setFilters(prev => ({ ...prev, date: newDate }));
     };
     const handleApplyFilters = () => {
-        setPage(0); // Reset to first page
-        // fetchEvents will be called by useEffect due to filters state change
+        setPage(0); 
     };
      const handleClearFilters = () => {
         setFilters({ category: '', city: '', status: '', date: null });
@@ -359,8 +351,7 @@ const EventManagement = ({ initialStatusFilter = '' }) => {
                             <Grid item xs={12}><Typography variant="subtitle2" sx={{mt:1, mb: -1}}>Organizer Info (Optional)</Typography></Grid>
                             <Grid item xs={12} sm={6}><TextField name="organizerInfo.name" label="Organizer Name" value={currentEvent.organizerInfo.name} onChange={handleChange} fullWidth margin="dense"/></Grid>
                             <Grid item xs={12} sm={6}><TextField name="organizerInfo.contact" label="Organizer Contact" value={currentEvent.organizerInfo.contact} onChange={handleChange} fullWidth margin="dense"/></Grid>
-                            {/* TODO: Add Venue Link (Dropdown of existing venues) - More complex */}
-                            {/* <Grid item xs={12}><TextField name="venue" label="Venue ID (Optional)" value={currentEvent.venue} onChange={handleChange} fullWidth margin="dense" helperText="Link to an existing Venue by ID"/></Grid> */}
+                        
                         </Grid>
                     </DialogContent>
                     <DialogActions sx={{px:3, pb:2}}>

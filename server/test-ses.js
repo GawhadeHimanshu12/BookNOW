@@ -10,7 +10,7 @@ const ses = new SESClient({
 });
 
 async function checkEmail() {
-    const emailToCheck = process.env.EMAIL_FROM_ADDRESS.trim(); // Trim removes accidental spaces
+    const emailToCheck = process.env.EMAIL_FROM_ADDRESS.trim(); 
     console.log(`Checking AWS verification status for: [${emailToCheck}]...`);
     
     try {

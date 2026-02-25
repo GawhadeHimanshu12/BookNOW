@@ -1,12 +1,10 @@
 // File: /client/src/pages/MyBookingsPage.jsx
-// Displays a list of the logged-in user's bookings.
 import React, { useState, useEffect } from 'react';
-import { getMyBookingsApi, cancelBookingApi } from '../api/bookings'; // API function to fetch and cancel bookings
-import { useAuth } from '../contexts/AuthContext'; // Hook to get user auth state
-import dayjs from 'dayjs'; // Library for easy date formatting
-import { Link as RouterLink } from 'react-router-dom'; // For linking to details
+import { getMyBookingsApi, cancelBookingApi } from '../api/bookings'; 
+import { useAuth } from '../contexts/AuthContext'; 
+import dayjs from 'dayjs'; 
+import { Link as RouterLink } from 'react-router-dom'; 
 
-// MUI Components for UI
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
@@ -26,22 +24,19 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 const MyBookingsPage = () => {
-    // State for bookings, loading status, and errors
     const [bookings, setBookings] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [bookingToCancel, setBookingToCancel] = useState(null);
     const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
-    // Get authentication status from context
     const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
-    // Effect to fetch bookings when the component mounts or auth status changes
     const fetchBookings = async () => {
         console.log("[MyBookingsPage] Auth confirmed, fetching bookings...");
         setIsLoading(true);
         setError(null);
         try {
-            const data = await getMyBookingsApi(); // Call the API
+            const data = await getMyBookingsApi();
             const sortedBookings = data.sort((a, b) =>
                 dayjs(b.showtime?.startTime || 0).valueOf() - dayjs(a.showtime?.startTime || 0).valueOf()
             );
@@ -49,7 +44,7 @@ const MyBookingsPage = () => {
         } catch (err) {
             console.error("[MyBookingsPage] Error fetching bookings:", err);
             setError(err.message || 'Failed to load your bookings.');
-            setBookings([]); // Clear bookings on error
+            setBookings([]); 
         } finally {
             setIsLoading(false);
         }
@@ -79,10 +74,8 @@ const MyBookingsPage = () => {
         if (!bookingToCancel) return;
         try {
             await cancelBookingApi(bookingToCancel._id);
-            // Refresh the bookings list to show the updated status
             fetchBookings(); 
         } catch (err) {
-            // Display error to the user
             alert(`Cancellation failed: ${err.msg || err.message}`);
         } finally {
             handleCloseCancelDialog();

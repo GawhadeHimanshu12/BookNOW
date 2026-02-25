@@ -10,12 +10,12 @@ function Footer() {
         <Box
             component="footer"
             sx={{
-                py: 3, // Vertical padding
-                px: 2, // Horizontal padding
-                mt: 'auto', // Push footer to bottom
+                py: 3, 
+                px: 2,
+                mt: 'auto',
                 backgroundColor: (theme) =>
                     theme.palette.mode === 'light' ? theme.palette.grey[800] : theme.palette.grey[900], // Dark background
-                color: 'grey.500', // Light text
+                color: 'grey.500', 
             }}
         >
             <Container maxWidth="lg">

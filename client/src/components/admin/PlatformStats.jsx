@@ -1,10 +1,10 @@
 // client/src/components/admin/PlatformStats.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
 import { getPlatformStatsAdminApi } from '../../api/admin';
 import {
     Box, Typography, Paper, Grid, CircularProgress, Alert, Card, CardContent, Divider, Link as MuiLink,
-    ListItemIcon // Added Link from MUI for consistent styling if needed
+    ListItemIcon 
 } from '@mui/material';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import MovieFilterIcon from '@mui/icons-material/MovieFilter';
@@ -13,11 +13,9 @@ import TheatersIcon from '@mui/icons-material/Theaters';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-// import LocationCityIcon from '@mui/icons-material/LocationCity';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 
-// Updated StatCard to be clickable
 const StatCard = ({ title, value, icon, color = "primary.main", linkTo, queryParams }) => {
     const navigate = useNavigate();
 
@@ -54,7 +52,7 @@ const StatCard = ({ title, value, icon, color = "primary.main", linkTo, queryPar
                 transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out'
             }}
             onClick={linkTo ? handleClick : undefined}
-            component={linkTo ? 'div' : Paper} // Make it a div if clickable for semantics
+            component={linkTo ? 'div' : Paper} 
         >
             {cardContent}
         </Card>
@@ -62,7 +60,7 @@ const StatCard = ({ title, value, icon, color = "primary.main", linkTo, queryPar
 };
 
 
-const PlatformStats = () => { // Removed navigateToTab prop, will use useNavigate directly
+const PlatformStats = () => { 
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
